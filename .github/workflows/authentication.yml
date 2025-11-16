@@ -1,0 +1,26 @@
+name: Authentication CI
+
+on:
+  push:
+    branches: [main, Authentication]
+  pull_request:
+    branches: [main, Authentication]
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: 3.12
+      - run: |
+          cd backend
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      - run: |
+          cd backend
+          python manage.py migrate
+      - run: |
+          cd backend
+          python manage.py test accounts
