@@ -1,69 +1,94 @@
-
+from django.test import TestCase, Client
 from django.urls import reverse
-from rest_framework.test import APITestCase
+from django.contrib.auth import get_user_model
 from rest_framework import status
-from .models import User
+from .serializers import CustomTokenObtainPairSerializer, ChangePasswordSerializer
 
-class AuthTests(APITestCase):
+User = get_user_model()
+
+
+class AuthTests(TestCase):
 
     def setUp(self):
+        self.client = Client()
         self.user = User.objects.create_user(
-            email="existing@test.com",
-            password="Testpass123!",
-            role=User.STUDENT,
-            full_name="Existing User"
+            email="student@example.com",
+            password="TestPass123!",
+            first_name="Test",
+            last_name="Student",
+            role="STU"
         )
 
-    def test_register_user_success(self):
-        url = reverse('register')
-        data = {
-            "full_name": "New User",
-            "email": "newuser@test.com",
-            "role": User.STUDENT,
-            "password": "Newpass123!",
-            "password2": "Newpass123!"
-        }
-        response = self.client.post(url, data, format='json')
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertTrue(User.objects.filter(email="newuser@test.com").exists())
-        new_user = User.objects.get(email="newuser@test.com")
-        self.assertTrue(len(new_user.user_id) == 9)
-        self.assertTrue(new_user.username.split('.')[-1].isdigit())
+        self.login_url = reverse("token_obtain_pair") 
+        self.change_password_url = reverse("change-password")  
 
-    def test_register_user_password_mismatch(self):
-        url = reverse('register')
-        data = {
-            "full_name": "Fail User",
-            "email": "failuser@test.com",
-            "role": User.STUDENT,
-            "password": "Password123",
-            "password2": "Password456",
-        }
-        response = self.client.post(url, data, format='json')
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("password", response.data)
+    def test_serializer_login_with_email(self):
+        data = {"identifier": "student@example.com", "password": "TestPass123!"}
+        serializer = CustomTokenObtainPairSerializer(data=data)
+        self.assertTrue(serializer.is_valid(), serializer.errors)
 
-    def test_register_invalid_role(self):
-        url = reverse('register')
-        data = {
-            "full_name": "Role User",
-            "email": "roleuser@test.com",
-            "role": "INVALID",
-            "password": "Rolepass123!",
-            "password2": "Rolepass123!"
-        }
-        response = self.client.post(url, data, format='json')
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("role", response.data)
+    def test_serializer_login_with_username(self):
+        data = {"identifier": self.user.username, "password": "TestPass123!"}
+        serializer = CustomTokenObtainPairSerializer(data=data)
+        self.assertTrue(serializer.is_valid(), serializer.errors)
 
-    def test_login_success(self):
-        url = reverse('token_obtain_pair')
-        data = {
-            "email": "existing@test.com",
-            "password": "Testpass123!"
-        }
-        response = self.client.post(url, data, format='json')
+    def test_serializer_wrong_password(self):
+        data = {"identifier": self.user.email, "password": "WrongPass"}
+        serializer = CustomTokenObtainPairSerializer(data=data)
+        self.assertFalse(serializer.is_valid())
+
+    def test_api_login_with_email(self):
+        response = self.client.post(
+            self.login_url,
+            {"identifier": "student@example.com", "password": "TestPass123!"},
+            content_type="application/json"
+        )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertIn("access", response.data)
-        self.assertIn("user", response.data)
-        self.assertEqual(response.data["user"]["email"], "existing@test.com")
+        self.assertIn("access", response.json())
+        self.assertIn("refresh", response.json())
+
+    def test_api_login_with_username(self):
+        response = self.client.post(
+            self.login_url,
+            {"identifier": self.user.username, "password": "TestPass123!"},
+            content_type="application/json"
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn("access", response.json())
+        self.assertIn("refresh", response.json())
+
+    def test_change_password_success(self):
+        login_response = self.client.post(
+            self.login_url,
+            {"identifier": self.user.email, "password": "TestPass123!"},
+            content_type="application/json"
+        )
+        token = login_response.json()["access"]
+
+        self.client.defaults["HTTP_AUTHORIZATION"] = f"Bearer {token}"
+
+        response = self.client.post(
+            self.change_password_url,
+            {"old_password": "TestPass123!", "new_password": "NewPass123!"},
+            content_type="application/json"
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["detail"], "Password changed successfully.")
+
+    def test_change_password_wrong_old(self):
+        login_response = self.client.post(
+            self.login_url,
+            {"identifier": self.user.email, "password": "TestPass123!"},
+            content_type="application/json"
+        )
+        token = login_response.json()["access"]
+
+        self.client.defaults["HTTP_AUTHORIZATION"] = f"Bearer {token}"
+
+        response = self.client.post(
+            self.change_password_url,
+            {"old_password": "WrongOld", "new_password": "NewPass123!"},
+            content_type="application/json"
+        )
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json()["detail"], "Old password is incorrect.")
