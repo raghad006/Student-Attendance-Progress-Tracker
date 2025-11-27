@@ -32,13 +32,13 @@ export default function Login() {
         return;
       }
 
-      localStorage.setItem("access_token", data.access);
-      localStorage.setItem("refresh_token", data.refresh);
-      localStorage.setItem("user_profile", JSON.stringify(data.user));
+      if (data.access) localStorage.setItem("access_token", data.access);
+      if (data.refresh) localStorage.setItem("refresh_token", data.refresh);
+      if (data.user) localStorage.setItem("user_profile", JSON.stringify(data.user));
 
-      const role = data.user.role;
+      const role = data.user?.role;
       if (role === "TCR") navigate("/teacher");
-      else navigate("/student");
+      else navigate("/student/dashboard");
     } catch (err) {
       console.error("Fetch failed:", err);
       setError("Something went wrong. Try again later.");
@@ -46,14 +46,14 @@ export default function Login() {
   };
 
   return (
-    <div className="flex justify-center items-center min-h-screen bg-gradient-to-r from-blue-500 to-blue-700 text-white">
+    <div className="flex justify-center items-center min-h-screen bg-gradient-to-r from-purple-400 to-purple-300 text-white">
       <div className="bg-white text-gray-800 p-8 rounded-2xl shadow-lg w-96">
-        <h2 className="text-2xl font-bold mb-4 text-center text-blue-700">
+        <h2 className="text-2xl font-bold mb-4 text-center text-black-600">
           Login to Your Account
         </h2>
 
         {error && (
-          <div className="bg-red-100 text-red-700 p-2 mb-4 rounded">{error}</div>
+          <div className="bg-red-100 text-red-600 p-2 mb-4 rounded">{error}</div>
         )}
 
         <form onSubmit={handleLogin}>
@@ -63,7 +63,7 @@ export default function Login() {
           <input
             type="text"
             placeholder="Enter your email or ID"
-            className="w-full mb-4 p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full mb-4 p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-purple-300"
             value={identifier}
             onChange={(e) => setIdentifier(e.target.value)}
           />
@@ -73,7 +73,7 @@ export default function Login() {
             <input
               type={showPassword ? "text" : "password"}
               placeholder="Enter your password"
-              className="w-full mb-4 p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full mb-4 p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-purple-300"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
@@ -88,7 +88,7 @@ export default function Login() {
 
           <button
             type="submit"
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-lg transition duration-200"
+            className="w-full bg-purple-400 hover:bg-purple-500 text-white font-semibold py-2 rounded-lg transition duration-200"
           >
             Login
           </button>

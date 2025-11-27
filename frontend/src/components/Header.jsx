@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 
 const Header = ({ onLogout, userType }) => {
   const [showMenu, setShowMenu] = useState(false);
+  const [userName, setUserName] = useState("");
   const menuRef = useRef(null);
   const navigate = useNavigate();
 
@@ -17,33 +18,37 @@ const Header = ({ onLogout, userType }) => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  useEffect(() => {
+    const userProfile = localStorage.getItem("user_profile");
+    if (userProfile) {
+      const user = JSON.parse(userProfile);
+      setUserName(user.username || user.first_name || "User");
+    }
+  }, []);
+
   const handleLogout = () => {
     setShowMenu(false);
+    localStorage.removeItem("access_token");
+    localStorage.removeItem("refresh_token");
+    localStorage.removeItem("user_profile");
     if (onLogout) onLogout();
     navigate("/login");
   };
 
   return (
     <header className="fixed top-0 left-0 w-full h-24 bg-white flex items-center justify-between px-10 shadow-md z-50">
-
-      {/* LEFT SECTION (Logo + Title + Search) */}
       <div className="flex items-center gap-6">
-
         <img
           src="/book.png"
           alt="University Logo"
           className="w-16 h-16 object-contain"
         />
-
-        {/* App Title */}
         <h1 className="text-3xl font-bold text-gray-800 tracking-tight">
           Attendance Tracker
         </h1>
       </div>
 
-
       <div className="flex items-center gap-6">
-
         <button className="p-3 rounded-full hover:bg-gray-100">
           <Bell className="w-6 h-6 text-gray-700" />
         </button>
@@ -60,7 +65,7 @@ const Header = ({ onLogout, userType }) => {
             />
             <div className="text-sm text-left">
               <p className="font-semibold text-gray-800">
-                {userType === "teacher" ? "Teacher Name" : "Student Name"}
+                {userName || (userType === "teacher" ? "Teacher Name" : "Student Name")}
               </p>
               <p className="text-gray-500 text-xs">
                 {userType === "teacher" ? "Teacher" : "Student"}
@@ -80,7 +85,6 @@ const Header = ({ onLogout, userType }) => {
             </div>
           )}
         </div>
-
       </div>
     </header>
   );

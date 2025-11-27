@@ -9,12 +9,12 @@ export default function Home() {
   };
 
   return (
-    <div className="flex flex-col justify-center items-center min-h-screen bg-gradient-to-r from-blue-500 to-blue-300 text-white">
+    <div className="flex flex-col justify-center items-center min-h-screen bg-gradient-to-r from-purple-500 to-purple-300 text-white">
       <h1 className="text-4xl font-bold mb-6">Welcome to Attendance Tracker</h1>
       <p className="text-lg mb-6">Please login to continue</p>
       <button
         onClick={goToLogin}
-        className="bg-white text-blue-600 font-bold py-2 px-6 rounded-lg hover:bg-gray-100 transition duration-200"
+        className="bg-white text-purple-600 font-bold py-2 px-6 rounded-lg hover:bg-gray-100 transition duration-200"
       >
         Login
       </button>
