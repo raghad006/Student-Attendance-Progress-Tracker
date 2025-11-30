@@ -1,8 +1,8 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import Dashboard from './Dashboard';
-import BiologyPage from './BiologyPage';
-import AttendancePage from './AttendancePage';
+import Dashboard from './Teacher/Dashboard';
+import BiologyPage from './Teacher/BiologyPage';
+import AttendancePage from './Teacher/AttendancePage';
 import './App.css';
 
 function App() {
