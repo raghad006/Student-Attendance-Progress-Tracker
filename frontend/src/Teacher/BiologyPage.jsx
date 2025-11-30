@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "../components/Header";
 
@@ -6,14 +6,12 @@ export default function BiologyPage() {
   const navigate = useNavigate();
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedDate, setSelectedDate] = useState("");
 
-  const students = [
+ const students = [
     {
       name: "Diana Prince",
       id: "ID-98762",
       grade: 4.8,
-      note: "Excellent work on lab, perfect attendance.",
       avatar: "",
       fullId: "987654324",
       course: "Biology 101",
@@ -27,7 +25,6 @@ export default function BiologyPage() {
       name: "Malak Wael",
       id: "ID-98761",
       grade: 2.7,
-      note: "Multiple absences due to medical appointments.",
       avatar: "",
       fullId: "987654325",
       course: "Biology 101",
@@ -41,7 +38,6 @@ export default function BiologyPage() {
       name: "Ethan Hunt",
       id: "ID-98760",
       grade: 3.9,
-      note: "Needs improvement in lab work.",
       avatar: "",
       fullId: "987654326",
       course: "Biology 101",
@@ -55,7 +51,6 @@ export default function BiologyPage() {
       name: "Fatima Ali",
       id: "ID-98759",
       grade: 4.5,
-      note: "Excellent participation.",
       avatar: "",
       fullId: "987654327",
       course: "Biology 101",
@@ -69,7 +64,6 @@ export default function BiologyPage() {
       name: "Alex Johnson",
       id: "ID-98758",
       grade: 3.3,
-      note: "Needs to improve lab reports.",
       avatar: "",
       fullId: "987654328",
       course: "Biology 101",
@@ -83,7 +77,6 @@ export default function BiologyPage() {
       name: "Brenda Smith",
       id: "ID-98757",
       grade: 4.0,
-      note: "Good understanding of concepts.",
       avatar: "",
       fullId: "987654329",
       course: "Biology 101",
@@ -94,7 +87,6 @@ export default function BiologyPage() {
       ]
     }
   ];
-
   const filteredStudents = students.filter(student => 
     student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     student.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -124,8 +116,7 @@ export default function BiologyPage() {
   };
 
   const handleSearchChange = e => setSearchTerm(e.target.value);
-  const handleDateChange = e => setSelectedDate(e.target.value);
-  const clearSearch = () => { setSearchTerm(""); setSelectedDate(""); };
+  const clearSearch = () => setSearchTerm("");
 
   return (
     <div>
@@ -152,18 +143,12 @@ export default function BiologyPage() {
               onChange={handleSearchChange}
               className="px-4 py-3 border border-gray-300 rounded-xl focus:border-purple-400 focus:outline-none w-64"
             />
-            <input 
-              type="date" 
-              value={selectedDate}
-              onChange={handleDateChange}
-              className="px-4 py-3 border border-gray-300 rounded-xl focus:border-purple-400 focus:outline-none"
-            />
-            {(searchTerm || selectedDate) && (
+            {searchTerm && (
               <button 
                 onClick={clearSearch}
                 className="bg-gray-500 text-white px-6 py-3 rounded-xl hover:bg-gray-600 transition-colors"
               >
-                Clear Filters
+                Clear Search
               </button>
             )}
           </div>

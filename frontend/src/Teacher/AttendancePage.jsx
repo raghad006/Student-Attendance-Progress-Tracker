@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import { ChevronDown } from "lucide-react";
-import Header from "../components/Header"; // adjust the path
+import { ChevronDown, User, CheckCircle, FileEdit } from "lucide-react";
+import Header from "../components/Header";
 
 const initialStudents = [
   { id: 1, name: "Alex Johnson", attendance: "Absent", note: "" },
@@ -57,8 +57,10 @@ const AttendancePage = () => {
   return (
     <div>
       <Header userType="teacher" />
+
       <div className="p-10 w-full max-w-7xl mx-auto bg-gray-50 min-h-screen mt-24">
         <div className="bg-white rounded-3xl shadow-lg p-8 overflow-visible relative">
+
           <div className="flex justify-between items-center mb-8 flex-wrap gap-4">
             <h1 className="text-3xl font-extrabold text-gray-800">Attendance</h1>
             <div className="relative w-80">
@@ -88,7 +90,7 @@ const AttendancePage = () => {
             </button>
 
             <button
-              onClick={() => window.location.href = "/dashboard"}
+              onClick={() => (window.location.href = "/dashboard")}
               className="bg-gray-100 text-gray-800 px-4 py-2 rounded-xl hover:bg-gray-200 transition shadow-md"
             >
               Back to Dashboard
@@ -99,12 +101,36 @@ const AttendancePage = () => {
             <table className="w-full text-sm">
               <thead className="text-gray-600 bg-gray-100">
                 <tr>
-                  <th className="p-3 text-left">ID</th>
-                  <th className="p-3 text-left">Student</th>
-                  <th className="p-3 text-left">Attendance</th>
-                  <th className="p-3 text-left">Note</th>
+                  <th className="p-3 text-left">
+                    <div className="flex items-center gap-2">
+                      <User size={16} />
+                      ID
+                    </div>
+                  </th>
+
+                  <th className="p-3 text-left">
+                    <div className="flex items-center gap-2">
+                      <User size={16} />
+                      Student
+                    </div>
+                  </th>
+
+                  <th className="p-3 text-left">
+                    <div className="flex items-center gap-2">
+                      <CheckCircle size={16} />
+                      Attendance
+                    </div>
+                  </th>
+
+                  <th className="p-3 text-left">
+                    <div className="flex items-center gap-2">
+                      <FileEdit size={16} />
+                      Note
+                    </div>
+                  </th>
                 </tr>
               </thead>
+
               <tbody className="text-gray-900">
                 {filteredStudents.map((student, index) => (
                   <tr
@@ -113,6 +139,7 @@ const AttendancePage = () => {
                   >
                     <td className="p-3 font-medium">{student.id}</td>
                     <td className="p-3">{student.name}</td>
+
                     <td className="p-3 relative">
                       <button
                         onClick={() =>
@@ -147,6 +174,7 @@ const AttendancePage = () => {
                         </div>
                       )}
                     </td>
+
                     <td className="p-3">
                       <input
                         type="text"
@@ -158,6 +186,7 @@ const AttendancePage = () => {
                     </td>
                   </tr>
                 ))}
+
                 {filteredStudents.length === 0 && (
                   <tr>
                     <td colSpan="4" className="text-center py-6 text-gray-500">
