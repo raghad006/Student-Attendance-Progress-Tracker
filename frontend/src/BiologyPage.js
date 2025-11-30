@@ -1,7 +1,10 @@
 import React from "react";
-import './BiologyPage.css'; // We'll create this CSS file
+import { useNavigate } from "react-router-dom";
+import './BiologyPage.css';
 
-export default function BiologyPage({ onNavigateToDashboard })  {
+export default function BiologyPage() {
+  const navigate = useNavigate();
+  
   const students = [
     {
       name: "Alex Johnson",
@@ -50,7 +53,7 @@ export default function BiologyPage({ onNavigateToDashboard })  {
       <aside className="sidebar">
         <h2 className="logo">🎓 EduTrack</h2>
         <nav className="menu">
-            <a onClick={onNavigateToDashboard}>📊 Dashboard</a>
+            <a onClick={() => navigate('/dashboard')}>📊 Dashboard</a>
             <a className="active">📘 Courses</a>
             <a>📈 Reports</a>
             <a>⚙️ Settings</a>

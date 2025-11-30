@@ -1,19 +1,20 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import './Dashboard.css';
 
-export default function Dashboard({ onNavigateToBiology, onNavigateToDashboard , onNavigateToAttendance })  {
+export default function Dashboard() {
+  const navigate = useNavigate();
   
-  console.log('Dashboard component rendered'); // Debug log
-  
+  console.log('Dashboard component rendered');
+
   const handleBiologyClick = () => {
-    console.log('=== BIOLOGY BUTTON CLICKED ==='); // Debug log
-    console.log('onNavigateToBiology function:', onNavigateToBiology); // Check if function exists
-    if (onNavigateToBiology) {
-      onNavigateToBiology();
-      console.log('Function called successfully');
-    } else {
-      console.log('ERROR: onNavigateToBiology is undefined!');
-    }
+    console.log('=== BIOLOGY BUTTON CLICKED ===');
+    navigate('/biology');
+  };
+
+  const handleAttendanceClick = () => {
+    console.log('=== ATTENDANCE BUTTON CLICKED ===');
+    navigate('/attendance');
   };
 
   return (
@@ -30,7 +31,7 @@ export default function Dashboard({ onNavigateToBiology, onNavigateToDashboard ,
         </div>
 
         <nav className="menu">
-          <a className="active" onClick={onNavigateToDashboard}>📊 Dashboard</a>
+          <a className="active" onClick={() => navigate('/dashboard')}>📊 Dashboard</a>
           <a>📚 Courses</a>
           <a>👥 Students</a>
           <a>📈 Reports</a>
@@ -74,7 +75,7 @@ export default function Dashboard({ onNavigateToBiology, onNavigateToDashboard ,
           <h2>Quick Actions</h2>
 
           <div className="actions-grid">
-            <button className="action pink" onClick={onNavigateToAttendance}>🗓️ Take Attendance</button>
+            <button className="action pink" onClick={handleAttendanceClick}>🗓️ Take Attendance</button>
             <button className="action">📊 View Reports</button>
             <button className="action">➕ Manage Students</button>
           </div>

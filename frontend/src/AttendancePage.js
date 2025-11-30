@@ -1,7 +1,10 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import './AttendancePage.css';
 
-export default function AttendancePage({ onNavigateToDashboard }) {
+export default function AttendancePage() {
+  const navigate = useNavigate();
+  
   const students = [
     { id: 1, name: "Alex Johnson", present: false },
     { id: 2, name: "Brenda Smith", present: false },
@@ -36,7 +39,7 @@ export default function AttendancePage({ onNavigateToDashboard }) {
         </div>
 
         <nav className="menu">
-          <a onClick={onNavigateToDashboard}>📊 Dashboard</a>
+          <a onClick={() => navigate('/dashboard')}>📊 Dashboard</a>
           <a>📚 Courses</a>
           <a className="active">👥 Take Attendance</a>
           <a>📈 Reports</a>
@@ -106,7 +109,7 @@ export default function AttendancePage({ onNavigateToDashboard }) {
         </div>
 
         <div className="action-buttons">
-          <button className="btn-cancel" onClick={onNavigateToDashboard}>
+          <button className="btn-cancel" onClick={() => navigate('/dashboard')}>
             Cancel
           </button>
           <button className="btn-save" onClick={() => alert('Attendance saved successfully!')}>
