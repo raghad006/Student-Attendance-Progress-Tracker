@@ -34,7 +34,7 @@ export default function BiologyPage() {
       avatar: ""
     },
     {
-      name: "Ethan Hunt",
+      name: "malak wael",
       id: "ID-98761",
       grade: 2.7,
       note: "Doctor's appointment.",
@@ -82,9 +82,6 @@ export default function BiologyPage() {
             type="date" 
             className="px-4 py-3 border border-gray-300 rounded-xl focus:border-purple-400 focus:outline-none"
           />
-          <button className="bg-purple-400 text-white px-6 py-3 rounded-xl hover:bg-purple-500 transition-colors">
-            ➕ Add Student
-          </button>
         </div>
 
         <div className="bg-white rounded-2xl shadow-sm p-6 mb-8">
