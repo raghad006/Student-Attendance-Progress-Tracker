@@ -4,6 +4,7 @@ import Home from "./pages/Home";
 import Login from "./pages/Login";
 import StudentDashboard from "./student/dashboard";
 import Header from "./components/Header";
+import Course from "./student/courses";
 
 const PrivateRoute = ({ children }) => {
   const token = localStorage.getItem("access_token");
@@ -24,6 +25,16 @@ function App() {
             <PrivateRoute>
               <Header userType="student" />
               <StudentDashboard />
+            </PrivateRoute>
+          }
+        />
+
+        <Route
+          path="/student/courses/:id"
+          element={
+            <PrivateRoute>
+              <Header userType="student" />
+              <Course />
             </PrivateRoute>
           }
         />
