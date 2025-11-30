@@ -4,6 +4,8 @@ import { useNavigate } from "react-router-dom";
 export default function BiologyPage() {
   const navigate = useNavigate();
   const [selectedStudent, setSelectedStudent] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedDate, setSelectedDate] = useState("");
   
   const students = [
     {
@@ -78,6 +80,19 @@ export default function BiologyPage() {
     }
   ];
 
+  // Filter students based on search term
+  const filteredStudents = students.filter(student => {
+    const matchesSearch = searchTerm === "" || 
+      student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      student.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      student.fullId.includes(searchTerm);
+    
+    // If date is selected, you could add date filtering logic here
+    // For now, we'll just use the search term filtering
+    
+    return matchesSearch;
+  });
+
   const getGradeColor = (grade) => {
     if (grade >= 4.5) return 'text-green-600';
     if (grade >= 3.5) return 'text-blue-600';
@@ -98,6 +113,19 @@ export default function BiologyPage() {
     const total = attendance.length;
     const present = attendance.filter(a => a.status === "Present").length;
     return ((present / total) * 100).toFixed(0);
+  };
+
+  const handleSearchChange = (e) => {
+    setSearchTerm(e.target.value);
+  };
+
+  const handleDateChange = (e) => {
+    setSelectedDate(e.target.value);
+  };
+
+  const clearSearch = () => {
+    setSearchTerm("");
+    setSelectedDate("");
   };
 
   return (
@@ -124,16 +152,48 @@ export default function BiologyPage() {
         </div>
 
         <div className="flex flex-wrap justify-center gap-4 mb-8">
-          <input 
-            type="text" 
-            placeholder="🔍 Search by name or ID..." 
-            className="px-4 py-3 border border-gray-300 rounded-xl focus:border-purple-400 focus:outline-none w-64"
-          />
+          <div className="relative">
+            <input 
+              type="text" 
+              placeholder="🔍 Search by name or ID..." 
+              value={searchTerm}
+              onChange={handleSearchChange}
+              className="px-4 py-3 border border-gray-300 rounded-xl focus:border-purple-400 focus:outline-none w-64"
+            />
+            {searchTerm && (
+              <button 
+                onClick={clearSearch}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              >
+                ✕
+              </button>
+            )}
+          </div>
           <input 
             type="date" 
+            value={selectedDate}
+            onChange={handleDateChange}
             className="px-4 py-3 border border-gray-300 rounded-xl focus:border-purple-400 focus:outline-none"
           />
+          {(searchTerm || selectedDate) && (
+            <button 
+              onClick={clearSearch}
+              className="bg-gray-500 text-white px-6 py-3 rounded-xl hover:bg-gray-600 transition-colors"
+            >
+              Clear Filters
+            </button>
+          )}
         </div>
+
+        {/* Search results info */}
+        {searchTerm && (
+          <div className="text-center mb-4">
+            <p className="text-gray-600">
+              Showing {filteredStudents.length} of {students.length} students
+              {searchTerm && ` for "${searchTerm}"`}
+            </p>
+          </div>
+        )}
 
         {/* Student Details Modal */}
         {selectedStudent && (
@@ -219,45 +279,53 @@ export default function BiologyPage() {
               </tr>
             </thead>
             <tbody>
-              {students.map((student, index) => (
-                <tr key={index} className="border-b border-gray-100 last:border-b-0">
-                  <td className="py-4">
-                    <div className="flex items-center gap-3">
-                      <img 
-                        src={student.avatar || "/user.png"} 
-                        alt={student.name}
-                        className="w-10 h-10 rounded-full"
-                        onError={(e) => {
-                          e.target.src = "/user.png";
-                        }}
+              {filteredStudents.length > 0 ? (
+                filteredStudents.map((student, index) => (
+                  <tr key={index} className="border-b border-gray-100 last:border-b-0">
+                    <td className="py-4">
+                      <div className="flex items-center gap-3">
+                        <img 
+                          src={student.avatar || "/user.png"} 
+                          alt={student.name}
+                          className="w-10 h-10 rounded-full"
+                          onError={(e) => {
+                            e.target.src = "/user.png";
+                          }}
+                        />
+                        <span className="font-medium">{student.name}</span>
+                      </div>
+                    </td>
+                    <td className="py-4 text-gray-700">{student.id}</td>
+                    <td className="py-4">
+                      <span className={`text-xl font-bold ${getGradeColor(student.grade)}`}>
+                        {student.grade.toFixed(1)}
+                      </span>
+                      <span className="text-sm text-gray-500 ml-1">/5</span>
+                    </td>
+                    <td className="py-4">
+                      <input 
+                        type="text" 
+                        defaultValue={student.note}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-purple-400 focus:outline-none"
                       />
-                      <span className="font-medium">{student.name}</span>
-                    </div>
-                  </td>
-                  <td className="py-4 text-gray-700">{student.id}</td>
-                  <td className="py-4">
-                    <span className={`text-xl font-bold ${getGradeColor(student.grade)}`}>
-                      {student.grade.toFixed(1)}
-                    </span>
-                    <span className="text-sm text-gray-500 ml-1">/5</span>
-                  </td>
-                  <td className="py-4">
-                    <input 
-                      type="text" 
-                      defaultValue={student.note}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-purple-400 focus:outline-none"
-                    />
-                  </td>
-                  <td className="py-4">
-                    <button 
-                      onClick={() => setSelectedStudent(student)}
-                      className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors text-sm"
-                    >
-                      View
-                    </button>
+                    </td>
+                    <td className="py-4">
+                      <button 
+                        onClick={() => setSelectedStudent(student)}
+                        className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors text-sm"
+                      >
+                        View
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="5" className="py-8 text-center text-gray-500">
+                    No students found matching your search criteria.
                   </td>
                 </tr>
-              ))}
+              )}
             </tbody>
           </table>
         </div>
