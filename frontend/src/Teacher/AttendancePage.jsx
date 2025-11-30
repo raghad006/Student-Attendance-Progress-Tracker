@@ -1,193 +1,177 @@
-import React from "react";
-import { useNavigate } from "react-router-dom";
-import { CircularProgressbar, buildStyles } from "react-circular-progressbar";
-import "react-circular-progressbar/dist/styles.css";
+import React, { useState } from "react";
+import { ChevronDown } from "lucide-react";
+import Header from "../components/Header"; // adjust the path
 
-export default function AttendancePage() {
-  const navigate = useNavigate();
+const initialStudents = [
+  { id: 1, name: "Alex Johnson", attendance: "Absent", note: "" },
+  { id: 2, name: "Brenda Smith", attendance: "Absent", note: "" },
+  { id: 3, name: "Carlos Gomez", attendance: "Absent", note: "" },
+  { id: 4, name: "Diana Prince", attendance: "Absent", note: "" },
+  { id: 5, name: "Ethan Hunt", attendance: "Absent", note: "" },
+];
 
-  const students = [
-    { id: 1, name: "Alex Johnson", present: false },
-    { id: 2, name: "Brenda Smith", present: false },
-    { id: 3, name: "Carlos Gomez", present: false },
-    { id: 4, name: "Diana Prince", present: false },
-    { id: 5, name: "Ethan Hunt", present: false },
-  ];
+const AttendancePage = () => {
+  const [students, setStudents] = useState(initialStudents);
+  const [search, setSearch] = useState("");
+  const [openDropdownIndex, setOpenDropdownIndex] = useState(null);
 
-  const [attendance, setAttendance] = React.useState(students);
-  const [date, setDate] = React.useState(new Date().toISOString().split("T")[0]);
+  const attendanceOptions = ["Present", "Absent", "Late"];
 
-  const toggleAttendance = (id) => {
-    setAttendance((prev) =>
-      prev.map((s) =>
-        s.id === id ? { ...s, present: !s.present } : s
-      )
-    );
+  const handleAttendanceChange = (index, value) => {
+    const updated = [...students];
+    updated[index].attendance = value;
+    setStudents(updated);
+    setOpenDropdownIndex(null);
   };
 
-  const presentCount = attendance.filter((s) => s.present).length;
-  const total = attendance.length;
-  const percentage = Math.round((presentCount / total) * 100);
+  const handleNoteChange = (index, value) => {
+    const updated = [...students];
+    updated[index].note = value;
+    setStudents(updated);
+  };
+
+  const handleMarkAllPresent = () => {
+    const updated = students.map((student) => ({
+      ...student,
+      attendance: "Present",
+    }));
+    setStudents(updated);
+  };
+
+  const filteredStudents = students.filter((s) =>
+    s.name.toLowerCase().includes(search.toLowerCase())
+  );
+
+  const getAttendanceColor = (status) => {
+    switch (status) {
+      case "Present":
+        return "bg-green-100 text-green-800 hover:bg-green-200";
+      case "Late":
+        return "bg-blue-100 text-blue-800 hover:bg-blue-200";
+      case "Absent":
+      default:
+        return "bg-red-100 text-red-800 hover:bg-red-200";
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-10">
-      <div className="max-w-4xl mx-auto px-4">
-        
-        <button
-          onClick={() => navigate("/dashboard")}
-          className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition mb-6"
-        >
-          <span className="text-xl">←</span> Back to Dashboard
-        </button>
-
-        <div className="bg-white rounded-2xl shadow-sm p-8 mb-10 border border-gray-100">
-          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-800 mb-2">
-                Attendance — Biology 101
-              </h1>
-              <p className="text-gray-600 text-lg">
-                {new Date(date).toLocaleDateString()}
-              </p>
-            </div>
-
-            <div className="flex items-center gap-3 bg-gray-100 px-4 py-2 rounded-xl shadow-inner">
-              <label className="text-gray-700 font-medium">Date:</label>
+    <div>
+      <Header userType="teacher" />
+      <div className="p-10 w-full max-w-7xl mx-auto bg-gray-50 min-h-screen mt-24">
+        <div className="bg-white rounded-3xl shadow-lg p-8 overflow-visible relative">
+          <div className="flex justify-between items-center mb-8 flex-wrap gap-4">
+            <h1 className="text-3xl font-extrabold text-gray-800">Attendance</h1>
+            <div className="relative w-80">
               <input
-                type="date"
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-                className="bg-transparent border-none focus:outline-none text-gray-700"
+                type="text"
+                placeholder="Search student..."
+                className="w-full pl-4 pr-4 py-2 bg-gray-100 rounded-2xl shadow-sm focus:ring-2 focus:ring-gray-300 focus:outline-none text-gray-700 transition-all duration-300"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
               />
             </div>
           </div>
-        </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-10">
+          <div className="flex justify-end gap-4 mb-4">
+            <button
+              onClick={handleMarkAllPresent}
+              className="bg-green-100 text-green-800 px-4 py-2 rounded-xl hover:bg-green-200 transition shadow-md"
+            >
+              Mark All as Present
+            </button>
 
-          <div className="bg-white rounded-2xl shadow-sm p-6 flex flex-col items-center border border-gray-100">
-            <div className="w-32 h-32 mb-4">
-              <CircularProgressbar
-                value={percentage}
-                text={`${percentage}%`}
-                styles={buildStyles({
-                  textSize: "16px",
-                  pathColor: percentage > 70 ? "#9333ea" : "#f59e0b",
-                  textColor: "#1f2937",
-                  trailColor: "#e5e7eb",
-                })}
-              />
-            </div>
-            <h3 className="text-lg font-semibold text-gray-700">
-              Attendance Rate
-            </h3>
+            <button
+              onClick={() => alert("Attendance saved successfully!")}
+              className="bg-green-100 text-green-800 px-6 py-2 rounded-xl hover:bg-green-200 transition shadow-md"
+            >
+              Save Attendance
+            </button>
+
+            <button
+              onClick={() => window.location.href = "/dashboard"}
+              className="bg-gray-100 text-gray-800 px-4 py-2 rounded-xl hover:bg-gray-200 transition shadow-md"
+            >
+              Back to Dashboard
+            </button>
           </div>
 
-          <div className="lg:col-span-3 grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="bg-white rounded-2xl shadow-sm p-6 text-center border border-gray-100">
-              <div className="text-4xl font-bold text-purple-600 mb-2">
-                {presentCount}
-              </div>
-              <p className="text-gray-600 font-medium">Present</p>
-            </div>
+          <div className="rounded-2xl overflow-visible shadow-sm relative border border-gray-200">
+            <table className="w-full text-sm">
+              <thead className="text-gray-600 bg-gray-100">
+                <tr>
+                  <th className="p-3 text-left">ID</th>
+                  <th className="p-3 text-left">Student</th>
+                  <th className="p-3 text-left">Attendance</th>
+                  <th className="p-3 text-left">Note</th>
+                </tr>
+              </thead>
+              <tbody className="text-gray-900">
+                {filteredStudents.map((student, index) => (
+                  <tr
+                    key={student.id}
+                    className="even:bg-gray-50 hover:bg-gray-100 transition-all duration-200"
+                  >
+                    <td className="p-3 font-medium">{student.id}</td>
+                    <td className="p-3">{student.name}</td>
+                    <td className="p-3 relative">
+                      <button
+                        onClick={() =>
+                          setOpenDropdownIndex(
+                            openDropdownIndex === index ? null : index
+                          )
+                        }
+                        className={`flex items-center justify-between w-36 px-4 py-2 rounded-full font-semibold transition-shadow shadow-sm ${getAttendanceColor(
+                          student.attendance
+                        )}`}
+                      >
+                        {student.attendance} <ChevronDown size={16} />
+                      </button>
 
-            <div className="bg-white rounded-2xl shadow-sm p-6 text-center border border-gray-100">
-              <div className="text-4xl font-bold text-red-500 mb-2">
-                {total - presentCount}
-              </div>
-              <p className="text-gray-600 font-medium">Absent</p>
-            </div>
-
-            <div className="bg-white rounded-2xl shadow-sm p-6 text-center border border-gray-100">
-              <div className="text-4xl font-bold text-gray-800 mb-2">
-                {total}
-              </div>
-              <p className="text-gray-600 font-medium">Total Students</p>
-            </div>
+                      {openDropdownIndex === index && (
+                        <div className="absolute top-full mt-2 w-36 bg-white rounded-xl shadow-lg border border-gray-200 z-50">
+                          {attendanceOptions.map((option) => (
+                            <button
+                              key={option}
+                              className={`w-full text-left px-4 py-2 hover:bg-gray-50 transition ${
+                                option === "Present"
+                                  ? "text-green-800"
+                                  : option === "Late"
+                                  ? "text-blue-800"
+                                  : "text-red-800"
+                              }`}
+                              onClick={() => handleAttendanceChange(index, option)}
+                            >
+                              {option}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </td>
+                    <td className="p-3">
+                      <input
+                        type="text"
+                        placeholder="Add note..."
+                        className="w-full px-3 py-2 rounded-xl border border-gray-300 focus:ring-2 focus:ring-gray-200 focus:outline-none"
+                        value={student.note}
+                        onChange={(e) => handleNoteChange(index, e.target.value)}
+                      />
+                    </td>
+                  </tr>
+                ))}
+                {filteredStudents.length === 0 && (
+                  <tr>
+                    <td colSpan="4" className="text-center py-6 text-gray-500">
+                      No students found
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
           </div>
         </div>
-
-        <div className="bg-white rounded-2xl shadow-sm p-8 border border-gray-100 mb-10">
-
-          <div className="flex flex-col sm:flex-row justify-between items-center mb-8 gap-4">
-            <h2 className="text-2xl font-bold text-gray-800">Student Attendance</h2>
-
-            <div className="flex gap-3">
-              <button
-                onClick={() => setAttendance(attendance.map(s => ({ ...s, present: true })))}
-                className="bg-purple-600 text-white px-5 py-2 rounded-xl hover:bg-purple-700 transition shadow-md"
-              >
-                Mark All Present
-              </button>
-
-              <button
-                onClick={() => setAttendance(attendance.map(s => ({ ...s, present: false })))}
-                className="bg-gray-200 text-gray-800 px-5 py-2 rounded-xl hover:bg-gray-300 transition shadow-inner"
-              >
-                Clear All
-              </button>
-            </div>
-          </div>
-
-          <div className="space-y-4">
-            {attendance.map((student) => (
-              <div
-                key={student.id}
-                className="flex flex-col sm:flex-row justify-between items-center gap-6 p-5 rounded-xl border border-gray-200 hover:shadow-md transition bg-white"
-              >
-                <div className="flex items-center gap-5 flex-1">
-                  <img
-                    src="/user.png"
-                    alt={student.name}
-                    className="w-14 h-14 rounded-full shadow object-cover"
-                  />
-
-                  <div>
-                    <div className="font-semibold text-gray-800 text-lg">
-                      {student.name}
-                    </div>
-                    <div className="text-gray-500 text-sm">
-                      ID: {student.id}
-                    </div>
-                  </div>
-                </div>
-
-                <button
-                  onClick={() => toggleAttendance(student.id)}
-                  className={`px-8 py-3 rounded-xl font-semibold transition-all text-white shadow-lg min-w-[140px] ${
-                    student.present
-                      ? "bg-purple-600 hover:bg-purple-700 shadow-purple-200"
-                      : "bg-red-500 hover:bg-red-600 shadow-red-200"
-                  }`}
-                >
-                  {student.present ? "Present" : "Absent"}
-                </button>
-              </div>
-            ))}
-          </div>
-
-        </div>
-
-        <div className="flex flex-col sm:flex-row justify-center gap-4">
-          <button
-            onClick={() => navigate("/dashboard")}
-            className="bg-gray-400 text-white px-10 py-3 rounded-xl hover:bg-gray-500 transition shadow"
-          >
-            Cancel
-          </button>
-
-          <button
-            onClick={() => {
-              alert("Attendance saved successfully!");
-              navigate("/dashboard");
-            }}
-            className="bg-purple-600 text-white px-10 py-3 rounded-xl hover:bg-purple-700 transition shadow-lg shadow-purple-200"
-          >
-            Save Attendance
-          </button>
-        </div>
-
       </div>
     </div>
   );
-}
+};
+
+export default AttendancePage;
