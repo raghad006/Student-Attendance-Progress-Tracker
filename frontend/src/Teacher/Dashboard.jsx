@@ -15,28 +15,41 @@ export default function Dashboard() {
       <Header userType="student" />
 
       <div className="flex w-full p-6 gap-6 pt-32">
-        <main className="flex-1 bg-white shadow rounded-xl p-8">
-          <header className="flex justify-between items-center mb-10">
+        <main className="flex-1 flex flex-col gap-6">
+
+          <header className="flex justify-between items-center mb-6">
             <div>
               <h1 className="text-3xl font-bold text-gray-800">Welcome, Maria!</h1>
               <p className="text-gray-500">Here is your summary for today.</p>
             </div>
+
+            <button
+              onClick={handleAttendanceClick}
+              className="bg-purple-600 hover:bg-purple-700 text-white font-semibold px-6 py-3 rounded-xl shadow text-lg transition-all duration-200"
+            >
+              Take Attendance
+            </button>
           </header>
 
           <section className="mb-10">
             <h2 className="text-xl font-semibold text-gray-800 mb-4">My Courses</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              <div className="bg-white border rounded-xl shadow p-6 flex flex-col">
-                <div className="w-full h-24 bg-purple-400 rounded-lg mb-4"></div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
+
+              <div className="bg-white border rounded-xl shadow p-6 flex flex-col min-h-[260px] max-w-[520px]">
+                <div className="w-full h-36 bg-purple-400 rounded-lg mb-4"></div>
                 <h3 className="text-lg font-semibold">Introduction to Algebra</h3>
                 <p className="text-gray-500 mb-4">28 Students</p>
-                <button className="mt-auto px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700">
+                <button                           
+                onClick={handleBiologyClick}
+                className="mt-auto px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700">
+
                   View
                 </button>
               </div>
 
-              <div className="bg-white border rounded-xl shadow p-6 flex flex-col">
-                <div className="w-full h-24 bg-emerald-500 rounded-lg mb-4"></div>
+              <div className="bg-white border rounded-xl shadow p-6 flex flex-col min-h-[260px] max-w-[520px]">
+                <div className="w-full h-36 bg-emerald-500 rounded-lg mb-4"></div>
                 <h3 className="text-lg font-semibold">Biology 101</h3>
                 <p className="text-gray-500 mb-4">32 Students</p>
                 <button
@@ -46,34 +59,14 @@ export default function Dashboard() {
                   View
                 </button>
               </div>
-            </div>
-          </section>
 
-          <section>
-            <h2 className="text-xl font-semibold text-gray-800 mb-4">
-              Quick Actions
-            </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-1">
-              <button
-                onClick={handleAttendanceClick}
-                className="
-                  bg-purple-300 
-                  hover:bg-purple-400 
-                  px-3 py-2 
-                  rounded-md 
-                  text-sm font-medium 
-                  shadow 
-                  w-fit
-                "
-              >
-                🗓️ Take Attendance
-              </button>
             </div>
           </section>
         </main>
 
-        <aside className="w-80 bg-white shadow rounded-xl p-6 flex flex-col items-center">
-          <h3 className="text-lg font-semibold text-gray-800 mb-6">
+        <aside className="w-80 bg-white shadow rounded-xl p-6 flex flex-col items-center gap-6">
+
+          <h3 className="text-lg font-semibold text-gray-800 mb-4">
             Today's Attendance Overview
           </h3>
 
