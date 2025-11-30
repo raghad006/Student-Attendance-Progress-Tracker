@@ -330,11 +330,7 @@ export default function BiologyPage() {
           </table>
         </div>
 
-        <div className="flex justify-center gap-4">
-          <button className="bg-purple-400 text-white px-8 py-3 rounded-xl hover:bg-purple-500 transition-colors">
-            Save Changes
-          </button>
-        </div>
+        {/* Save Changes button has been removed */}
       </div>
     </div>
   );
