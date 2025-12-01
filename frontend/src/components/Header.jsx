@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Bell, LogOut } from "lucide-react";
+import { LogOut } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 const Header = ({ onLogout, userType }) => {
@@ -49,10 +49,6 @@ const Header = ({ onLogout, userType }) => {
       </div>
 
       <div className="flex items-center gap-6">
-        <button className="p-3 rounded-full hover:bg-gray-100">
-          <Bell className="w-6 h-6 text-gray-700" />
-        </button>
-
         <div className="relative" ref={menuRef}>
           <button
             onClick={() => setShowMenu((prev) => !prev)}
