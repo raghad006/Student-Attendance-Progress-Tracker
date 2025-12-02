@@ -1,0 +1,26 @@
+name: Student Dashboard CI
+
+on:
+  push:
+    branches: [main, student_dashboard]
+  pull_request:
+    branches: [main, student_dashboard]
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: 3.12
+      - run: |
+          cd attendance_project
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      - run: |
+          cd attendance_project
+          python manage.py migrate
+      - run: |
+          cd attendance_project
+          python manage.py test students
