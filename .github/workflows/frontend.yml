@@ -4,7 +4,7 @@ on:
   push:
     branches: [main,student_dashboard,Authentication,new_bio]
   pull_request:
-    branches: [main,student_dashboard,Authentication, new_bio]
+    branches: [main,student_dashboard,Authentication,new_bio]
 
 jobs:
   frontend:
@@ -16,7 +16,7 @@ jobs:
           node-version: 20
       - run: |
           cd frontend
-          npm install,
+          npm install
       - run: |
           cd frontend
           npm run build
