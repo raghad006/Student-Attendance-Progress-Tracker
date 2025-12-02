@@ -38,7 +38,7 @@ export default function Login() {
 
       const role = data.user?.role;
       if (role === "TCR") navigate("/teacher");
-      else navigate("/student/dashboard");
+      else if (role === "STU") navigate("/student/dashboard");
     } catch (err) {
       console.error("Fetch failed:", err);
       setError("Something went wrong. Try again later.");

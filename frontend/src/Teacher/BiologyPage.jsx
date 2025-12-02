@@ -125,7 +125,7 @@ export default function BiologyPage() {
         <div className="w-full max-w-7xl mx-auto p-8">
           <div className="mb-6 flex items-center justify-start">
             <button 
-              onClick={() => navigate('/dashboard')}
+              onClick={() => navigate('/teacher')}
               className="bg-gray-600 text-white px-5 py-2 rounded-lg hover:bg-gray-700 transition-colors"
             >
               ← Back to Dashboard

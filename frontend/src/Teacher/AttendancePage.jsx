@@ -90,7 +90,7 @@ const AttendancePage = () => {
             </button>
 
             <button
-              onClick={() => (window.location.href = "/dashboard")}
+              onClick={() => (window.location.href = "/teacher")}
               className="bg-gray-100 text-gray-800 px-4 py-2 rounded-xl hover:bg-gray-200 transition shadow-md"
             >
               Back to Dashboard
