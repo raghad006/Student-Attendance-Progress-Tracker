@@ -20,17 +20,18 @@ jobs:
         ports:
           - 3306:3306
         options: >-
-          --health-cmd="mysqladmin ping -h localhost -u root -prootpassword"
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -u root -prootpassword"
           --health-interval=10s
           --health-timeout=5s
           --health-retries=5
+    
     env:
       DEBUG: 1
       SECRET_KEY: django-insecure-test-key-for-ci
       DB_NAME: test_db
       DB_USER: test_user
       DB_PASSWORD: test_password
-      DB_HOST: localhost
+      DB_HOST: 127.0.0.1 
       DB_PORT: 3306
     
     steps:
@@ -40,15 +41,30 @@ jobs:
         with:
           python-version: 3.12
       
-      - name: Install dependencies
+      - name: Install MySQL client and dependencies
         run: |
+          sudo apt-get update
+          sudo apt-get install -y default-mysql-client
           cd attendance_project
           python -m pip install --upgrade pip
           pip install -r requirements.txt
       
-      - name: Wait for MySQL
+      - name: Wait for MySQL to be ready
         run: |
-          sleep 10
+          for i in {1..30}; do
+            if mysqladmin ping -h127.0.0.1 -u root -prootpassword --silent; then
+              echo "MySQL is ready!"
+              break
+            fi
+            echo "Waiting for MySQL... ($i/30)"
+            sleep 2
+          done
+      
+      - name: Create test user and database
+        run: |
+          mysql -h 127.0.0.1 -u root -prootpassword -e "CREATE USER IF NOT EXISTS 'test_user'@'%' IDENTIFIED BY 'test_password';"
+          mysql -h 127.0.0.1 -u root -prootpassword -e "GRANT ALL PRIVILEGES ON test_db.* TO 'test_user'@'%';"
+          mysql -h 127.0.0.1 -u root -prootpassword -e "FLUSH PRIVILEGES;"
       
       - name: Run migrations
         run: |
