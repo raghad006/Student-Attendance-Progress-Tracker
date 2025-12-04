@@ -5,22 +5,68 @@ on:
     branches: [main, Authentication]
   pull_request:
     branches: [main, Authentication]
-
 jobs:
   backend:
     runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: rootpassword
+          MYSQL_DATABASE: attendance_db
+          MYSQL_USER: test_user
+          MYSQL_PASSWORD: test_password
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -u root -prootpassword"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+    
+    env:
+      DEBUG: 1
+      SECRET_KEY: django-insecure-test-key-for-ci
+      DB_NAME: attendance_db
+      DB_USER: test_user
+      DB_PASSWORD: test_password
+      DB_HOST: 127.0.0.1
+      DB_PORT: 3306
+    
     steps:
       - uses: actions/checkout@v3
+      
       - uses: actions/setup-python@v4
         with:
           python-version: 3.12
-      - run: |
+      
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y default-mysql-client
           cd attendance_project
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-      - run: |
+      
+      - name: Wait for MySQL
+        run: |
+          sleep 10
+      
+      - name: Setup MySQL permissions
+        run: |
+          mysql -h 127.0.0.1 -u root -prootpassword -e "
+          DROP USER IF EXISTS 'test_user'@'%';
+          CREATE USER 'test_user'@'%' IDENTIFIED BY 'test_password';
+          GRANT ALL PRIVILEGES ON *.* TO 'test_user'@'%';
+          FLUSH PRIVILEGES;
+          "
+      
+      - name: Run migrations
+        run: |
           cd attendance_project
           python manage.py migrate
-      - run: |
+      
+      - name: Run tests
+        run: |
           cd attendance_project
-          python manage.py test accounts
+          python manage.py test accounts --keepdb

@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 
-import Login from "./pages/Login";
 import Home from "./pages/Home";
+import Login from "./pages/Login";
 
 import TeacherDashboard from "./Teacher/Dashboard";
 import BiologyPage from "./Teacher/BiologyPage";
@@ -12,16 +12,17 @@ import StudentDashboard from "./student/dashboard";
 import Course from "./student/courses";
 import Header from "./components/Header";
 
-
 const PrivateRoute = ({ children, role }) => {
   const [loading, setLoading] = useState(true);
   const [authorized, setAuthorized] = useState(false);
+  const [user, setUser] = useState(null);
 
   useEffect(() => {
     const token = localStorage.getItem("access_token");
-    const user = JSON.parse(localStorage.getItem("user_profile"));
+    const userProfile = JSON.parse(localStorage.getItem("user_profile"));
+    setUser(userProfile);
 
-    if (token && user && (!role || user.role === role)) {
+    if (token && userProfile && (!role || userProfile.role === role)) {
       setAuthorized(true);
     } else {
       setAuthorized(false);
@@ -30,8 +31,18 @@ const PrivateRoute = ({ children, role }) => {
   }, [role]);
 
   if (loading) return <div>Loading...</div>;
+  if (!authorized) return <Navigate to="/login" replace />;
 
-  return authorized ? children : <Navigate to="/login" replace />;
+  if (user?.role === "STU") {
+    return (
+      <>
+        <Header userType="student" />
+        {children}
+      </>
+    );
+  }
+
+  return children;
 };
 
 function App() {
@@ -40,6 +51,7 @@ function App() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
+
         <Route
           path="/teacher"
           element={
@@ -49,7 +61,7 @@ function App() {
           }
         />
         <Route
-          path="/teacher/biology"
+          path="/biology"
           element={
             <PrivateRoute role="TCR">
               <BiologyPage />
@@ -57,18 +69,18 @@ function App() {
           }
         />
         <Route
-          path="/teacher/attendance"
+          path="/attendance"
           element={
             <PrivateRoute role="TCR">
               <AttendancePage />
             </PrivateRoute>
           }
         />
+
         <Route
           path="/student/dashboard"
           element={
-            <PrivateRoute role="STD">
-              <Header userType="student" />
+            <PrivateRoute role="STU">
               <StudentDashboard />
             </PrivateRoute>
           }
@@ -76,12 +88,12 @@ function App() {
         <Route
           path="/student/courses/:id"
           element={
-            <PrivateRoute role="STD">
-              <Header userType="student" />
+            <PrivateRoute role="STU">
               <Course />
             </PrivateRoute>
           }
         />
+
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>
