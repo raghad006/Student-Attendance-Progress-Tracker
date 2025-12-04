@@ -6,7 +6,6 @@ import Header from "../components/Header";
 
 import {
   User,
-  ClipboardCheck,
   BookOpen,
   Book,
   Atom,
@@ -18,11 +17,10 @@ export default function Dashboard() {
   const navigate = useNavigate();
 
   const handleBiologyClick = () => navigate("/biology");
-  const handleAttendanceClick = () => navigate("/attendance");
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header userType="student" />
+      <Header userType="teacher" />
 
       <div className="flex w-full p-6 gap-6 pt-32">
         <main className="flex-1 flex flex-col gap-6">
@@ -35,14 +33,6 @@ export default function Dashboard() {
               </h1>
               <p className="text-gray-500">Here is your summary for today.</p>
             </div>
-
-            <button
-              onClick={handleAttendanceClick}
-              className="bg-purple-600 hover:bg-purple-700 text-white font-semibold px-6 py-3 rounded-xl shadow text-lg transition-all duration-200 flex items-center gap-2"
-            >
-              <ClipboardCheck size={20} />
-              Take Attendance
-            </button>
           </header>
 
           <section className="mb-10">
@@ -124,3 +114,4 @@ export default function Dashboard() {
     </div>
   );
 }
+ 
