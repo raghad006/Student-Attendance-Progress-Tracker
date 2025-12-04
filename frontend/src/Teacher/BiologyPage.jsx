@@ -1,13 +1,14 @@
- import React, { useState } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "../components/Header";
+import { ClipboardCheck } from "lucide-react";
 
 export default function BiologyPage() {
   const navigate = useNavigate();
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
 
- const students = [
+  const students = [
     {
       name: "Diana Prince",
       id: "ID-98762",
@@ -87,6 +88,7 @@ export default function BiologyPage() {
       ]
     }
   ];
+
   const filteredStudents = students.filter(student => 
     student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     student.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -135,22 +137,31 @@ export default function BiologyPage() {
           <h1 className="text-3xl font-bold text-gray-800 mb-2">Biology 101 - Fall 2024</h1>
           <p className="text-gray-600 mb-6">Manage student grades and notes.</p>
 
-          <div className="flex flex-wrap justify-start gap-4 mb-8">
-            <input 
-              type="text" 
-              placeholder="Search by name or ID..." 
-              value={searchTerm}
-              onChange={handleSearchChange}
-              className="px-4 py-3 border border-gray-300 rounded-xl focus:border-purple-400 focus:outline-none w-64"
-            />
-            {searchTerm && (
-              <button 
-                onClick={clearSearch}
-                className="bg-gray-500 text-white px-6 py-3 rounded-xl hover:bg-gray-600 transition-colors"
-              >
-                Clear Search
-              </button>
-            )}
+          <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
+            <div className="flex items-center gap-2">
+              <input 
+                type="text" 
+                placeholder="Search by name or ID..." 
+                value={searchTerm}
+                onChange={handleSearchChange}
+                className="px-4 py-3 border border-gray-300 rounded-xl focus:border-purple-400 focus:outline-none w-64"
+              />
+              {searchTerm && (
+                <button 
+                  onClick={clearSearch}
+                  className="bg-gray-500 text-white px-6 py-3 rounded-xl hover:bg-gray-600 transition-colors"
+                >
+                  Clear
+                </button>
+              )}
+            </div>
+            <button
+              onClick={() => navigate('/attendance')}
+              className="bg-purple-600 hover:bg-purple-700 text-white font-semibold px-6 py-3 rounded-xl shadow text-lg transition-all duration-200 flex items-center gap-2"
+            >
+              <ClipboardCheck size={20} />
+              Take Attendance
+            </button>
           </div>
 
           <div className="bg-white rounded-2xl shadow-sm p-6 mb-8">
