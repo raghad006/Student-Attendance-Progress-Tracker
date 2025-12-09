@@ -98,9 +98,9 @@ const filteredStudents = students.filter((s) => {
             </button>
           </div>
 
-          <h1 className="text-3xl font-bold text-gray-800 mb-2">Course: {}</h1>
+          <h1 className="text-3xl font-bold text-gray-800 mb-2">Course</h1>
           <p className="text-gray-600 mb-6">
-            Manage student grades, notes, and attendance.
+            Manage student Attendance and Grades.
           </p>
 
           <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
@@ -122,7 +122,7 @@ const filteredStudents = students.filter((s) => {
               )}
             </div>
             <button
-              onClick={() => navigate("/attendance")}
+              onClick={() => navigate(`/teacher/courses/${id}/attendance`)}
               className="bg-purple-600 hover:bg-purple-700 text-white font-semibold px-6 py-3 rounded-xl shadow text-lg transition-all duration-200 flex items-center gap-2"
             >
               <ClipboardCheck size={20} /> Take Attendance

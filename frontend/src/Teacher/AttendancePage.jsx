@@ -1,21 +1,46 @@
-import React, { useState } from "react";
-import { ChevronDown, User, CheckCircle, FileEdit } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import { useParams, useNavigate } from "react-router-dom";
+import { ChevronDown } from "lucide-react";
 import Header from "../components/Header";
 
-const initialStudents = [
-  { id: 1, name: "Alex Johnson", attendance: "Absent", note: "" },
-  { id: 2, name: "Brenda Smith", attendance: "Absent", note: "" },
-  { id: 3, name: "Carlos Gomez", attendance: "Absent", note: "" },
-  { id: 4, name: "Diana Prince", attendance: "Absent", note: "" },
-  { id: 5, name: "Ethan Hunt", attendance: "Absent", note: "" },
-];
-
 const AttendancePage = () => {
-  const [students, setStudents] = useState(initialStudents);
+  const { id: courseId } = useParams();
+  const navigate = useNavigate();
+
+  const [students, setStudents] = useState([]);
   const [search, setSearch] = useState("");
   const [openDropdownIndex, setOpenDropdownIndex] = useState(null);
-
   const attendanceOptions = ["Present", "Absent", "Late"];
+
+  useEffect(() => {
+    const fetchStudents = async () => {
+      try {
+        const response = await axios.get(
+          `http://localhost:8000/api/students/courses/${courseId}/students/`,
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+            },
+          }
+        );
+
+        const studentsWithAttendance = response.data.map((s) => ({
+          id: s.id,
+          name: s.name,
+          attendance: "Absent",
+          note: "",
+        }));
+
+        setStudents(studentsWithAttendance);
+      } catch (error) {
+        console.error(error);
+        alert("Failed to fetch students");
+      }
+    };
+
+    fetchStudents();
+  }, [courseId]);
 
   const handleAttendanceChange = (index, value) => {
     const updated = [...students];
@@ -31,11 +56,32 @@ const AttendancePage = () => {
   };
 
   const handleMarkAllPresent = () => {
-    const updated = students.map((student) => ({
-      ...student,
-      attendance: "Present",
-    }));
+    const updated = students.map((student) => ({ ...student, attendance: "Present" }));
     setStudents(updated);
+  };
+
+  const handleSaveAttendance = async () => {
+    try {
+      const payload = {
+        course_id: courseId,
+        records: students.map((s) => ({
+          student_id: s.id,
+          status: s.attendance,
+          note: s.note,
+        })),
+      };
+
+      await axios.post("http://localhost:8000/api/attendance/take/", payload, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+        },
+      });
+
+      alert("Attendance saved successfully!");
+    } catch (error) {
+      console.error(error);
+      alert("Failed to save attendance!");
+    }
   };
 
   const filteredStudents = students.filter((s) =>
@@ -83,14 +129,14 @@ const AttendancePage = () => {
             </button>
 
             <button
-              onClick={() => alert("Attendance saved successfully!")}
+              onClick={handleSaveAttendance}
               className="bg-green-100 text-green-800 px-6 py-2 rounded-xl hover:bg-green-200 transition shadow-md"
             >
               Save Attendance
             </button>
 
             <button
-              onClick={() => (window.location.href = "/biology")}
+              onClick={() => navigate(`/teacher/courses/${courseId}`)}
               className="bg-gray-100 text-gray-800 px-4 py-2 rounded-xl hover:bg-gray-200 transition shadow-md"
             >
               Back to course
@@ -101,33 +147,10 @@ const AttendancePage = () => {
             <table className="w-full text-sm">
               <thead className="text-gray-600 bg-gray-100">
                 <tr>
-                  <th className="p-3 text-left">
-                    <div className="flex items-center gap-2">
-                      <User size={16} />
-                      ID
-                    </div>
-                  </th>
-
-                  <th className="p-3 text-left">
-                    <div className="flex items-center gap-2">
-                      <User size={16} />
-                      Student
-                    </div>
-                  </th>
-
-                  <th className="p-3 text-left">
-                    <div className="flex items-center gap-2">
-                      <CheckCircle size={16} />
-                      Attendance
-                    </div>
-                  </th>
-
-                  <th className="p-3 text-left">
-                    <div className="flex items-center gap-2">
-                      <FileEdit size={16} />
-                      Note
-                    </div>
-                  </th>
+                  <th className="p-3 text-left">ID</th>
+                  <th className="p-3 text-left">Student</th>
+                  <th className="p-3 text-left">Attendance</th>
+                  <th className="p-3 text-left">Note</th>
                 </tr>
               </thead>
 
@@ -143,9 +166,7 @@ const AttendancePage = () => {
                     <td className="p-3 relative">
                       <button
                         onClick={() =>
-                          setOpenDropdownIndex(
-                            openDropdownIndex === index ? null : index
-                          )
+                          setOpenDropdownIndex(openDropdownIndex === index ? null : index)
                         }
                         className={`flex items-center justify-between w-36 px-4 py-2 rounded-full font-semibold transition-shadow shadow-sm ${getAttendanceColor(
                           student.attendance
