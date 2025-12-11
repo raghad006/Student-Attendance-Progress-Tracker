@@ -11,40 +11,79 @@ const AttendancePage = () => {
   const [students, setStudents] = useState([]);
   const [search, setSearch] = useState("");
   const [openDropdownIndex, setOpenDropdownIndex] = useState(null);
-  const attendanceOptions = ["Present", "Absent", "Late"];
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split("T")[0]); // default today
+
+  const attendanceOptions = [
+    { label: "Present", value: "P" },
+    { label: "Absent", value: "A" },
+    { label: "Late", value: "L" },
+  ];
 
   useEffect(() => {
     const fetchStudents = async () => {
       try {
-        const response = await axios.get(
+        const token = localStorage.getItem("access_token");
+        if (!token) {
+          navigate("/login");
+          return;
+        }
+
+        const studentRes = await axios.get(
           `http://localhost:8000/api/students/courses/${courseId}/students/`,
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-            },
-          }
+          { headers: { Authorization: `Bearer ${token}` } }
         );
 
-        const studentsWithAttendance = response.data.map((s) => ({
+        const studentsWithAttendance = studentRes.data.map((s) => ({
           id: s.id,
           name: s.name,
-          attendance: "Absent",
+          status: "--",
           note: "",
         }));
 
-        setStudents(studentsWithAttendance);
+        const attendanceRes = await axios.get(
+          `http://localhost:8000/api/attendance/stats/${courseId}/`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+
+        const records = attendanceRes.data;
+
+        const updatedStudents = studentsWithAttendance.map((stu) => {
+          const rec = records.find(
+            (r) => r.id === stu.id || r.student_id === stu.id
+          );
+
+          if (rec) {
+            const dayRecord = rec.records?.find((r) => r.date === selectedDate);
+            return {
+              ...stu,
+              status:
+                dayRecord?.status === "P"
+                  ? "Present"
+                  : dayRecord?.status === "L"
+                  ? "Late"
+                  : dayRecord?.status === "A"
+                  ? "Absent"
+                  : "--",
+              note: dayRecord?.notes || "",
+            };
+          }
+
+          return stu;
+        });
+
+        setStudents(updatedStudents);
       } catch (error) {
-        console.error(error);
-        alert("Failed to fetch students");
+        console.error("Fetch failed:", error);
+        alert("Failed to fetch students or attendance");
       }
     };
 
     fetchStudents();
-  }, [courseId]);
+  }, [courseId, selectedDate, navigate]);
 
-  const handleAttendanceChange = (index, value) => {
+  const handleAttendanceChange = (index, option) => {
     const updated = [...students];
-    updated[index].attendance = value;
+    updated[index].status = option.label;
     setStudents(updated);
     setOpenDropdownIndex(null);
   };
@@ -56,30 +95,30 @@ const AttendancePage = () => {
   };
 
   const handleMarkAllPresent = () => {
-    const updated = students.map((student) => ({ ...student, attendance: "Present" }));
-    setStudents(updated);
+    setStudents(students.map((s) => ({ ...s, status: "Present" })));
   };
 
   const handleSaveAttendance = async () => {
     try {
+      const statusMap = { Present: "P", Absent: "A", Late: "L" };
+
       const payload = {
         course_id: courseId,
+        date: selectedDate,
         records: students.map((s) => ({
           student_id: s.id,
-          status: s.attendance,
-          note: s.note,
+          status: statusMap[s.status] || "A",
+          notes: s.note,
         })),
       };
 
       await axios.post("http://localhost:8000/api/attendance/take/", payload, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-        },
+        headers: { Authorization: `Bearer ${localStorage.getItem("access_token")}` },
       });
 
       alert("Attendance saved successfully!");
     } catch (error) {
-      console.error(error);
+      console.error("Save failed:", error);
       alert("Failed to save attendance!");
     }
   };
@@ -95,8 +134,9 @@ const AttendancePage = () => {
       case "Late":
         return "bg-blue-100 text-blue-800 hover:bg-blue-200";
       case "Absent":
-      default:
         return "bg-red-100 text-red-800 hover:bg-red-200";
+      default:
+        return "bg-gray-100 text-gray-500";
     }
   };
 
@@ -109,11 +149,17 @@ const AttendancePage = () => {
 
           <div className="flex justify-between items-center mb-8 flex-wrap gap-4">
             <h1 className="text-3xl font-extrabold text-gray-800">Attendance</h1>
-            <div className="relative w-80">
+            <div className="flex gap-4 items-center">
+              <input
+                type="date"
+                value={selectedDate}
+                onChange={(e) => setSelectedDate(e.target.value)}
+                className="px-4 py-2 border rounded-xl"
+              />
               <input
                 type="text"
                 placeholder="Search student..."
-                className="w-full pl-4 pr-4 py-2 bg-gray-100 rounded-2xl shadow-sm focus:ring-2 focus:ring-gray-300 focus:outline-none text-gray-700 transition-all duration-300"
+                className="pl-4 pr-4 py-2 bg-gray-100 rounded-2xl shadow-sm focus:ring-2 focus:ring-gray-300 focus:outline-none text-gray-700 transition-all duration-300"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
@@ -147,7 +193,7 @@ const AttendancePage = () => {
             <table className="w-full text-sm">
               <thead className="text-gray-600 bg-gray-100">
                 <tr>
-                  <th className="p-3 text-left">ID</th>
+                  <th className="p-3 text-left"></th>
                   <th className="p-3 text-left">Student</th>
                   <th className="p-3 text-left">Attendance</th>
                   <th className="p-3 text-left">Note</th>
@@ -169,27 +215,27 @@ const AttendancePage = () => {
                           setOpenDropdownIndex(openDropdownIndex === index ? null : index)
                         }
                         className={`flex items-center justify-between w-36 px-4 py-2 rounded-full font-semibold transition-shadow shadow-sm ${getAttendanceColor(
-                          student.attendance
+                          student.status
                         )}`}
                       >
-                        {student.attendance} <ChevronDown size={16} />
+                        {student.status} <ChevronDown size={16} />
                       </button>
 
                       {openDropdownIndex === index && (
                         <div className="absolute top-full mt-2 w-36 bg-white rounded-xl shadow-lg border border-gray-200 z-50">
                           {attendanceOptions.map((option) => (
                             <button
-                              key={option}
+                              key={option.value}
                               className={`w-full text-left px-4 py-2 hover:bg-gray-50 transition ${
-                                option === "Present"
+                                option.value === "P"
                                   ? "text-green-800"
-                                  : option === "Late"
+                                  : option.value === "L"
                                   ? "text-blue-800"
                                   : "text-red-800"
                               }`}
                               onClick={() => handleAttendanceChange(index, option)}
                             >
-                              {option}
+                              {option.label}
                             </button>
                           ))}
                         </div>

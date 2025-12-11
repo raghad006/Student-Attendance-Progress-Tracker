@@ -12,7 +12,7 @@ export default function CoursePage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchStudents = async () => {
+    const fetchData = async () => {
       const token = localStorage.getItem("access_token");
       if (!token) {
         navigate("/login");
@@ -20,7 +20,8 @@ export default function CoursePage() {
       }
 
       try {
-        const res = await fetch(
+        // 1. Fetch student list
+        const studentRes = await fetch(
           `http://localhost:8000/api/students/courses/${id}/students/`,
           {
             headers: {
@@ -29,11 +30,45 @@ export default function CoursePage() {
             },
           }
         );
+        if (!studentRes.ok) throw new Error("Failed to fetch students");
+        const studentData = await studentRes.json();
 
-        if (!res.ok) throw new Error("Failed to fetch students");
+        const attendanceRes = await fetch(
+          `http://localhost:8000/api/attendance/stats/${id}/`,
+          {
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        if (!attendanceRes.ok) throw new Error("Failed to fetch attendance");
+        const attendanceData = await attendanceRes.json();
+        const merged = studentData.map((s) => {
+          const stats = attendanceData.find((a) => a.id === s.id) || {};
+          return {
+            id: s.id,
+            name: s.name,
+            username: s.username || "--",
+            fullId: s.fullId || "--",
+            grade: stats.grade_out_of_5 ?? 0,
+            attendanceRate: stats.attendance_percentage ?? 0,
+            attendance: stats.records?.map((r) => ({
+              lecture: r.date,
+              status:
+                r.status === "P"
+                  ? "Present"
+                  : r.status === "L"
+                  ? "Late"
+                  : r.status === "A"
+                  ? "Absent"
+                  : "--",
+              notes: r.notes,
+            })) || [],
+          };
+        });
 
-        const data = await res.json();
-        setStudents(data || []);
+        setStudents(merged);
       } catch (err) {
         console.error(err);
       } finally {
@@ -41,18 +76,17 @@ export default function CoursePage() {
       }
     };
 
-    fetchStudents();
+    fetchData();
   }, [id, navigate]);
 
-const filteredStudents = students.filter((s) => {
-  const name = s.name?.toString().toLowerCase() ?? "";
-  const id = s.id?.toString().toLowerCase() ?? "";
-  const fullId = s.fullId?.toString().toLowerCase() ?? "";
-
-  const term = searchTerm.toLowerCase();
-  return name.includes(term) || id.includes(term) || fullId.includes(term);
-});
-
+  const filteredStudents = students.filter((s) => {
+    const term = searchTerm.toLowerCase();
+    return (
+      (s.name?.toLowerCase() ?? "").includes(term) ||
+      (s.username?.toLowerCase() ?? "").includes(term) ||
+      (s.fullId?.toLowerCase() ?? "").includes(term)
+    );
+  });
 
   const getGradeColor = (grade) => {
     if (grade === null || grade === undefined) return "text-gray-400";
@@ -71,7 +105,7 @@ const filteredStudents = students.filter((s) => {
       case "Absent":
         return "text-red-600";
       default:
-        return "text-gray-600";
+        return "text-gray-500";
     }
   };
 
@@ -99,15 +133,13 @@ const filteredStudents = students.filter((s) => {
           </div>
 
           <h1 className="text-3xl font-bold text-gray-800 mb-2">Course</h1>
-          <p className="text-gray-600 mb-6">
-            Manage student Attendance and Grades.
-          </p>
+          <p className="text-gray-600 mb-6">Manage student Attendance and Grades.</p>
 
           <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
             <div className="flex items-center gap-2">
               <input
                 type="text"
-                placeholder="Search by name or ID..."
+                placeholder="Search by name, username or ID..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="px-4 py-3 border border-gray-300 rounded-xl focus:border-purple-400 focus:outline-none w-64"
@@ -133,8 +165,8 @@ const filteredStudents = students.filter((s) => {
             <table className="w-full min-w-[600px]">
               <thead>
                 <tr className="border-b-2 border-gray-100">
-                  <th className="pb-4 text-left text-gray-500 font-semibold">Student Full Name</th>
-                  <th className="pb-4 text-left text-gray-500 font-semibold">Student username</th>
+                  <th className="pb-4 text-left text-gray-500 font-semibold">Full Name</th>
+                  <th className="pb-4 text-left text-gray-500 font-semibold">Username</th>
                   <th className="pb-4 text-left text-gray-500 font-semibold">Grade /5</th>
                   <th className="pb-4 text-left text-gray-500 font-semibold">Attendance Rate</th>
                   <th className="pb-4 text-left text-gray-500 font-semibold">Actions</th>
@@ -175,12 +207,23 @@ const filteredStudents = students.filter((s) => {
 
       {selectedStudent && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-2xl shadow-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
             <div className="p-8">
               <div className="flex justify-between items-start mb-6">
                 <div>
                   <h2 className="text-2xl font-bold text-gray-800 mb-2">{selectedStudent.name || "--"}</h2>
+                  <p className="text-gray-600">Username: {selectedStudent.username || "--"}</p>
                   <p className="text-gray-600">Student ID: {selectedStudent.fullId || "--"}</p>
+                  <p className="text-gray-700">
+                    <strong>Grade:</strong>{" "}
+                    <span className={getGradeColor(selectedStudent.grade)}>
+                      {selectedStudent.grade?.toFixed(1) ?? "--"}/5
+                    </span>
+                  </p>
+                  <p className="text-gray-700">
+                    <strong>Attendance Rate:</strong>{" "}
+                    {calculateAttendanceRate(selectedStudent.attendance)}%
+                  </p>
                 </div>
                 <button
                   onClick={() => setSelectedStudent(null)}
@@ -190,29 +233,17 @@ const filteredStudents = students.filter((s) => {
                 </button>
               </div>
 
-              <div className="mb-8">
-                <h3 className="text-xl font-semibold text-gray-800 mb-4">
-                  Current Grade:{" "}
-                  <span className={getGradeColor(selectedStudent.grade)}>
-                    {selectedStudent.grade?.toFixed(1) ?? "--"}/5
-                  </span>
-                </h3>
-                <p className="text-gray-700 mb-2">
-                  <strong>Attendance Rate:</strong>{" "}
-                  {calculateAttendanceRate(selectedStudent.attendance)}%
-                </p>
-              </div>
-
               <div className="border-t border-gray-200 pt-6">
-                <h3 className="text-xl font-semibold text-gray-800 mb-4">Attendance Status</h3>
-                <div className="space-y-4">
+                <h3 className="text-xl font-semibold text-gray-800 mb-4">Attendance Timeline</h3>
+                <div className="space-y-2 max-h-96 overflow-y-auto">
                   {selectedStudent.attendance?.map((att, i) => (
                     <div
                       key={i}
-                      className="border border-gray-200 rounded-lg p-4 flex justify-between items-center"
+                      className="border border-gray-200 rounded-lg p-2 flex justify-between items-center gap-4"
                     >
-                      <span>{att.lecture || "--"}</span>
-                      <span className={getStatusColor(att.status)}>{att.status || "--"}</span>
+                      <span className="w-1/3">{att.lecture}</span>
+                      <span className={`w-1/3 ${getStatusColor(att.status)}`}>{att.status}</span>
+                      <span className="w-1/3 text-gray-500 italic">{att.notes}</span>
                     </div>
                   ))}
                 </div>
