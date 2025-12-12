@@ -8,17 +8,15 @@ const Dashboard = () => {
   const [courses, setCourses] = useState([]);
   const [today, setToday] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [courseColors, setCourseColors] = useState({});
 
-  const getRandomGradient = () => {
-    const gradients = [
-      "from-teal-400 to-teal-200",
-      "from-purple-400 to-pink-300",
-      "from-yellow-400 to-orange-300",
-      "from-blue-400 to-indigo-300",
-      "from-green-400 to-lime-300",
-    ];
-    return gradients[Math.floor(Math.random() * gradients.length)];
-  };
+  const gradients = [
+    "from-teal-400 to-teal-200",
+    "from-purple-400 to-pink-300",
+    "from-yellow-400 to-orange-300",
+    "from-blue-400 to-indigo-300",
+    "from-green-400 to-lime-300",
+  ];
 
   useEffect(() => {
     const fetchDashboard = async () => {
@@ -46,6 +44,12 @@ const Dashboard = () => {
           total: data.today?.total || 0,
           classes: data.today?.classes || [],
         });
+
+        const colors = {};
+        (data.courses || []).forEach((course, index) => {
+          colors[course.id] = gradients[index % gradients.length];
+        });
+        setCourseColors(colors);
       } catch (err) {
         console.error(err);
       } finally {
@@ -81,7 +85,7 @@ const Dashboard = () => {
                 className="bg-white rounded-2xl shadow-lg p-4 flex flex-col gap-3 border border-gray-100"
               >
                 <div
-                  className={`h-48 rounded-xl bg-gradient-to-r ${getRandomGradient()}`}
+                  className={`h-48 rounded-xl bg-gradient-to-r ${courseColors[course.id]}`}
                 />
                 <div className="font-semibold text-gray-800">
                   {course.title}
