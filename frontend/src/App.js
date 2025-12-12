@@ -11,7 +11,7 @@ import AttendancePage from "./Teacher/AttendancePage";
 import StudentDashboard from "./student/dashboard";
 import Course from "./student/courses";
 import Header from "./components/Header";
-
+import NotificationPage from "./components/Notification";
 const PrivateRoute = ({ children, role }) => {
   const [loading, setLoading] = useState(true);
   const [authorized, setAuthorized] = useState(false);
@@ -72,7 +72,7 @@ function App() {
             </PrivateRoute>
           }
         />
-
+<Route path="/teacher/courses/:id/notify" element={<NotificationPage />} />
         <Route
           path="/student/dashboard"
           element={

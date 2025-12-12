@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import Header from "../components/Header";
-import { ClipboardCheck } from "lucide-react";
+import { ClipboardCheck, Bell } from "lucide-react";
+
 
 export default function CoursePage() {
   const navigate = useNavigate();
@@ -20,7 +21,6 @@ export default function CoursePage() {
       }
 
       try {
-        // 1. Fetch student list
         const studentRes = await fetch(
           `http://localhost:8000/api/students/courses/${id}/students/`,
           {
@@ -115,6 +115,10 @@ export default function CoursePage() {
     return ((present / attendance.length) * 100).toFixed(0);
   };
 
+  const handleNotify = () => {
+    navigate(`/teacher/courses/${id}/notify`);
+  };
+
   if (loading)
     return <div className="text-center mt-20 text-gray-700">Loading students...</div>;
 
@@ -153,12 +157,20 @@ export default function CoursePage() {
                 </button>
               )}
             </div>
-            <button
-              onClick={() => navigate(`/teacher/courses/${id}/attendance`)}
-              className="bg-purple-600 hover:bg-purple-700 text-white font-semibold px-6 py-3 rounded-xl shadow text-lg transition-all duration-200 flex items-center gap-2"
-            >
-              <ClipboardCheck size={20} /> Take Attendance
-            </button>
+            <div className="flex items-center gap-4">
+              <button
+                onClick={handleNotify}
+                className="bg-teal-600 hover:bg-teal-700 text-white font-semibold px-6 py-3 rounded-xl shadow text-lg transition-all duration-200 flex items-center gap-2"
+              >
+                <Bell size={20} /> Notify
+              </button>
+              <button
+                onClick={() => navigate(`/teacher/courses/${id}/attendance`)}
+                className="bg-purple-600 hover:bg-purple-700 text-white font-semibold px-6 py-3 rounded-xl shadow text-lg transition-all duration-200 flex items-center gap-2"
+              >
+                <ClipboardCheck size={20} /> Take Attendance
+              </button>
+            </div>
           </div>
 
           <div className="bg-white rounded-2xl shadow-sm p-6 mb-8 overflow-x-auto">

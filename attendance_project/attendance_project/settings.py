@@ -44,6 +44,8 @@ INSTALLED_APPS = [
     "accounts",
     'students',
     'attendance', 
+    "notifications", 
+
 ]
 
 MIDDLEWARE = [
@@ -61,7 +63,6 @@ MIDDLEWARE = [
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
 ]
-CORS_ALLOW_ALL_ORIGINS = True #dev onlyyyy
 
 ROOT_URLCONF = 'attendance_project.urls'
 AUTH_USER_MODEL = "accounts.User"
@@ -165,3 +166,16 @@ if 'test' in sys.argv or 'test_coverage' in sys.argv:
             'NAME': BASE_DIR / 'db_test.sqlite3',
         }
     }
+
+INSTALLED_APPS += ["channels"]
+
+ASGI_APPLICATION = "attendance_project.asgi.application"
+
+
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {"hosts": [("127.0.0.1", 6379)]},
+    }
+}
+
