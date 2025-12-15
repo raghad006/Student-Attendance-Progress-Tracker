@@ -11,7 +11,10 @@ const AttendancePage = () => {
   const [students, setStudents] = useState([]);
   const [search, setSearch] = useState("");
   const [openDropdownIndex, setOpenDropdownIndex] = useState(null);
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split("T")[0]); // default today
+  const [selectedDate, setSelectedDate] = useState(
+    new Date().toISOString().split("T")[0]
+  );
+  const [totalDays, setTotalDays] = useState(0);
 
   const attendanceOptions = [
     { label: "Present", value: "P" },
@@ -33,13 +36,6 @@ const AttendancePage = () => {
           { headers: { Authorization: `Bearer ${token}` } }
         );
 
-        const studentsWithAttendance = studentRes.data.map((s) => ({
-          id: s.id,
-          name: s.name,
-          status: "--",
-          note: "",
-        }));
-
         const attendanceRes = await axios.get(
           `http://localhost:8000/api/attendance/stats/${courseId}/`,
           { headers: { Authorization: `Bearer ${token}` } }
@@ -47,28 +43,31 @@ const AttendancePage = () => {
 
         const records = attendanceRes.data;
 
-        const updatedStudents = studentsWithAttendance.map((stu) => {
-          const rec = records.find(
-            (r) => r.id === stu.id || r.student_id === stu.id
-          );
+        const allDates = new Set();
+        studentRes.data.forEach((stu) => {
+          const timeline =
+            records.find((r) => r.id === stu.id)?.timeline || [];
+          timeline.forEach((rec) => allDates.add(rec.date));
+        });
+        setTotalDays(allDates.size);
 
-          if (rec) {
-            const dayRecord = rec.records?.find((r) => r.date === selectedDate);
-            return {
-              ...stu,
-              status:
-                dayRecord?.status === "P"
-                  ? "Present"
-                  : dayRecord?.status === "L"
-                  ? "Late"
-                  : dayRecord?.status === "A"
-                  ? "Absent"
-                  : "--",
-              note: dayRecord?.notes || "",
-            };
-          }
+        const updatedStudents = studentRes.data.map((stu) => {
+          const timeline =
+            records.find((r) => r.id === stu.id)?.timeline || [];
 
-          return stu;
+          const allAttendance = {};
+          timeline.forEach((rec) => {
+            allAttendance[rec.date] = rec.status;
+          });
+
+          return {
+            id: stu.id,
+            name: stu.full_name || stu.name,
+            status: allAttendance[selectedDate] || "--",
+            note:
+              timeline.find((r) => r.date === selectedDate)?.notes || "",
+            allAttendance,
+          };
         });
 
         setStudents(updatedStudents);
@@ -82,20 +81,42 @@ const AttendancePage = () => {
   }, [courseId, selectedDate, navigate]);
 
   const handleAttendanceChange = (index, option) => {
-    const updated = [...students];
-    updated[index].status = option.label;
-    setStudents(updated);
+    setStudents((prev) =>
+      prev.map((s, i) =>
+        i === index
+          ? {
+              ...s,
+              status: option.label,
+              allAttendance: {
+                ...s.allAttendance,
+                [selectedDate]: option.label,
+              },
+            }
+          : s
+      )
+    );
     setOpenDropdownIndex(null);
   };
 
   const handleNoteChange = (index, value) => {
-    const updated = [...students];
-    updated[index].note = value;
-    setStudents(updated);
+    setStudents((prev) =>
+      prev.map((s, i) =>
+        i === index ? { ...s, note: value } : s
+      )
+    );
   };
 
   const handleMarkAllPresent = () => {
-    setStudents(students.map((s) => ({ ...s, status: "Present" })));
+    setStudents((prev) =>
+      prev.map((s) => ({
+        ...s,
+        status: "Present",
+        allAttendance: {
+          ...s.allAttendance,
+          [selectedDate]: "Present",
+        },
+      }))
+    );
   };
 
   const handleSaveAttendance = async () => {
@@ -112,9 +133,15 @@ const AttendancePage = () => {
         })),
       };
 
-      await axios.post("http://localhost:8000/api/attendance/take/", payload, {
-        headers: { Authorization: `Bearer ${localStorage.getItem("access_token")}` },
-      });
+      await axios.post(
+        "http://localhost:8000/api/attendance/take/",
+        payload,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+          },
+        }
+      );
 
       alert("Attendance saved successfully!");
     } catch (error) {
@@ -128,16 +155,10 @@ const AttendancePage = () => {
   );
 
   const getAttendanceColor = (status) => {
-    switch (status) {
-      case "Present":
-        return "bg-green-100 text-green-800 hover:bg-green-200";
-      case "Late":
-        return "bg-blue-100 text-blue-800 hover:bg-blue-200";
-      case "Absent":
-        return "bg-red-100 text-red-800 hover:bg-red-200";
-      default:
-        return "bg-gray-100 text-gray-500";
-    }
+    if (status === "Present") return "bg-green-100 text-green-800";
+    if (status === "Late") return "bg-blue-100 text-blue-800";
+    if (status === "Absent") return "bg-red-100 text-red-800";
+    return "bg-gray-200 text-gray-600";
   };
 
   return (
@@ -145,10 +166,13 @@ const AttendancePage = () => {
       <Header userType="teacher" />
 
       <div className="p-10 w-full max-w-7xl mx-auto bg-gray-50 min-h-screen mt-24">
-        <div className="bg-white rounded-3xl shadow-lg p-8 overflow-visible relative">
+        <div className="bg-white rounded-3xl shadow-lg p-8">
 
           <div className="flex justify-between items-center mb-8 flex-wrap gap-4">
-            <h1 className="text-3xl font-extrabold text-gray-800">Attendance</h1>
+            <h1 className="text-3xl font-extrabold text-gray-800">
+              Attendance
+            </h1>
+
             <div className="flex gap-4 items-center">
               <input
                 type="date"
@@ -159,81 +183,87 @@ const AttendancePage = () => {
               <input
                 type="text"
                 placeholder="Search student..."
-                className="pl-4 pr-4 py-2 bg-gray-100 rounded-2xl shadow-sm focus:ring-2 focus:ring-gray-300 focus:outline-none text-gray-700 transition-all duration-300"
+                className="px-4 py-2 bg-gray-100 rounded-xl"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
             </div>
           </div>
 
-          <div className="flex justify-end gap-4 mb-4">
-            <button
-              onClick={handleMarkAllPresent}
-              className="bg-green-100 text-green-800 px-4 py-2 rounded-xl hover:bg-green-200 transition shadow-md"
-            >
-              Mark All as Present
-            </button>
+          <div className="flex justify-between items-center mb-4">
+            <div className="text-sm text-gray-600">
+              Total Class Days: <b>{totalDays}</b>
+            </div>
 
-            <button
-              onClick={handleSaveAttendance}
-              className="bg-green-100 text-green-800 px-6 py-2 rounded-xl hover:bg-green-200 transition shadow-md"
-            >
-              Save Attendance
-            </button>
+            <div className="flex gap-4">
+              <button
+                onClick={handleMarkAllPresent}
+                className="bg-green-100 text-green-800 px-4 py-2 rounded-xl"
+              >
+                Mark All as Present
+              </button>
 
-            <button
-              onClick={() => navigate(`/teacher/courses/${courseId}`)}
-              className="bg-gray-100 text-gray-800 px-4 py-2 rounded-xl hover:bg-gray-200 transition shadow-md"
-            >
-              Back to course
-            </button>
+              <button
+                onClick={handleSaveAttendance}
+                className="bg-green-100 text-green-800 px-6 py-2 rounded-xl"
+              >
+                Save Attendance
+              </button>
+
+              <button
+                onClick={() =>
+                  navigate(`/teacher/courses/${courseId}`)
+                }
+                className="bg-gray-100 text-gray-800 px-4 py-2 rounded-xl"
+              >
+                Back to course
+              </button>
+            </div>
           </div>
 
-          <div className="rounded-2xl overflow-visible shadow-sm relative border border-gray-200">
+          <div className="rounded-2xl border overflow-visible">
             <table className="w-full text-sm">
-              <thead className="text-gray-600 bg-gray-100">
+              <thead className="bg-gray-100">
                 <tr>
-                  <th className="p-3 text-left"></th>
+                  <th className="p-3 text-left">ID</th>
                   <th className="p-3 text-left">Student</th>
-                  <th className="p-3 text-left">Attendance</th>
+                  <th className="p-3 text-left">Status</th>
                   <th className="p-3 text-left">Note</th>
                 </tr>
               </thead>
 
-              <tbody className="text-gray-900">
+              <tbody>
                 {filteredStudents.map((student, index) => (
-                  <tr
-                    key={student.id}
-                    className="even:bg-gray-50 hover:bg-gray-100 transition-all duration-200"
-                  >
-                    <td className="p-3 font-medium">{student.id}</td>
+                  <tr key={student.id} className="even:bg-gray-50">
+                    <td className="p-3">{student.id}</td>
                     <td className="p-3">{student.name}</td>
 
                     <td className="p-3 relative">
                       <button
                         onClick={() =>
-                          setOpenDropdownIndex(openDropdownIndex === index ? null : index)
+                          setOpenDropdownIndex(
+                            openDropdownIndex === index ? null : index
+                          )
                         }
-                        className={`flex items-center justify-between w-36 px-4 py-2 rounded-full font-semibold transition-shadow shadow-sm ${getAttendanceColor(
+                        className={`flex items-center justify-between w-36 px-4 py-2 rounded-full ${getAttendanceColor(
                           student.status
                         )}`}
                       >
-                        {student.status} <ChevronDown size={16} />
+                        {student.status === "--"
+                          ? "Select"
+                          : student.status}
+                        <ChevronDown size={16} />
                       </button>
 
                       {openDropdownIndex === index && (
-                        <div className="absolute top-full mt-2 w-36 bg-white rounded-xl shadow-lg border border-gray-200 z-50">
+                        <div className="absolute top-full mt-2 w-36 bg-white rounded-xl shadow-lg border z-50">
                           {attendanceOptions.map((option) => (
                             <button
                               key={option.value}
-                              className={`w-full text-left px-4 py-2 hover:bg-gray-50 transition ${
-                                option.value === "P"
-                                  ? "text-green-800"
-                                  : option.value === "L"
-                                  ? "text-blue-800"
-                                  : "text-red-800"
-                              }`}
-                              onClick={() => handleAttendanceChange(index, option)}
+                              className="w-full text-left px-4 py-2 hover:bg-gray-50"
+                              onClick={() =>
+                                handleAttendanceChange(index, option)
+                              }
                             >
                               {option.label}
                             </button>
@@ -246,9 +276,11 @@ const AttendancePage = () => {
                       <input
                         type="text"
                         placeholder="Add note..."
-                        className="w-full px-3 py-2 rounded-xl border border-gray-300 focus:ring-2 focus:ring-gray-200 focus:outline-none"
+                        className="w-full px-3 py-2 rounded-xl border"
                         value={student.note}
-                        onChange={(e) => handleNoteChange(index, e.target.value)}
+                        onChange={(e) =>
+                          handleNoteChange(index, e.target.value)
+                        }
                       />
                     </td>
                   </tr>
@@ -256,7 +288,10 @@ const AttendancePage = () => {
 
                 {filteredStudents.length === 0 && (
                   <tr>
-                    <td colSpan="4" className="text-center py-6 text-gray-500">
+                    <td
+                      colSpan="4"
+                      className="text-center py-6 text-gray-500"
+                    >
                       No students found
                     </td>
                   </tr>
@@ -264,6 +299,7 @@ const AttendancePage = () => {
               </tbody>
             </table>
           </div>
+
         </div>
       </div>
     </div>

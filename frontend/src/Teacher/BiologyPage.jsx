@@ -212,7 +212,6 @@ export default function CoursePage() {
               <div className="flex justify-between items-start mb-6">
                 <div>
                   <h2 className="text-2xl font-bold text-gray-800 mb-2">{selectedStudent.name || "--"}</h2>
-                  <p className="text-gray-600">Username: {selectedStudent.username || "--"}</p>
                   <p className="text-gray-600">Student ID: {selectedStudent.fullId || "--"}</p>
                   <p className="text-gray-700">
                     <strong>Grade:</strong>{" "}
