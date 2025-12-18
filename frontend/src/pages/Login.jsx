@@ -32,13 +32,13 @@ export default function Login() {
         return;
       }
 
-      localStorage.setItem("access_token", data.access);
-      localStorage.setItem("refresh_token", data.refresh);
-      localStorage.setItem("user_profile", JSON.stringify(data.user));
+      if (data.access) localStorage.setItem("access_token", data.access);
+      if (data.refresh) localStorage.setItem("refresh_token", data.refresh);
+      if (data.user) localStorage.setItem("user_profile", JSON.stringify(data.user));
 
-      const role = data.user.role;
+      const role = data.user?.role;
       if (role === "TCR") navigate("/teacher");
-      else navigate("/student");
+      else if (role === "STU") navigate("/student/dashboard");
     } catch (err) {
       console.error("Fetch failed:", err);
       setError("Something went wrong. Try again later.");
