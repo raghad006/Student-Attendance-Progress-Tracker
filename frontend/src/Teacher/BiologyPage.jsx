@@ -22,7 +22,7 @@ export default function CoursePage() {
       try {
         // 1. Fetch student list
         const studentRes = await fetch(
-          `http://localhost:8000/api/students/courses/${id}/students/`,
+          `http://localhost:8080/api/students/courses/${id}/students/`,
           {
             headers: {
               "Content-Type": "application/json",
@@ -34,7 +34,7 @@ export default function CoursePage() {
         const studentData = await studentRes.json();
 
         const attendanceRes = await fetch(
-          `http://localhost:8000/api/attendance/stats/${id}/`,
+          `http://localhost:8080/api/attendance/stats/${id}/`,
           {
             headers: {
               "Content-Type": "application/json",

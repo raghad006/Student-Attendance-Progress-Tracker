@@ -32,12 +32,12 @@ const AttendancePage = () => {
         }
 
         const studentRes = await axios.get(
-          `http://localhost:8000/api/students/courses/${courseId}/students/`,
+          `http://localhost:8080/api/students/courses/${courseId}/students/`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
 
         const attendanceRes = await axios.get(
-          `http://localhost:8000/api/attendance/stats/${courseId}/`,
+          `http://localhost:8080/api/attendance/stats/${courseId}/`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
 
@@ -134,7 +134,7 @@ const AttendancePage = () => {
       };
 
       await axios.post(
-        "http://localhost:8000/api/attendance/take/",
+        "http://localhost:8080/api/attendance/take/",
         payload,
         {
           headers: {

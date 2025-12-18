@@ -29,7 +29,7 @@ const Dashboard = () => {
       }
 
       try {
-        const res = await fetch("http://localhost:8000/api/students/dashboard/", {
+        const res = await fetch("http://localhost:8080/api/students/dashboard/", {
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
