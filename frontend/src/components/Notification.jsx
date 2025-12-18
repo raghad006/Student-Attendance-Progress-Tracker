@@ -6,6 +6,9 @@ import { Bell, ArrowLeft } from "lucide-react";
 export default function NotificationPage() {
   const navigate = useNavigate();
   const { id } = useParams();
+
+  const [title, setTitle] = useState("");
+  const [titleError, setTitleError] = useState("");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -24,11 +27,7 @@ export default function NotificationPage() {
       try {
         const res = await fetch(
           `http://localhost:8000/api/students/courses/${id}/`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
+          { headers: { Authorization: `Bearer ${token}` } }
         );
 
         if (res.ok) {
@@ -45,6 +44,8 @@ export default function NotificationPage() {
     fetchCourseInfo();
   }, [id, navigate]);
 
+  const handleTitleChange = (e) => setTitle(e.target.value);
+
   const handleMessageChange = (e) => {
     const text = e.target.value;
     setMessage(text);
@@ -52,13 +53,21 @@ export default function NotificationPage() {
   };
 
   const handleClear = () => {
+    setTitle("");
     setMessage("");
     setCharacterCount(0);
     setError("");
+    setTitleError("");
     setSuccess("");
   };
 
   const handleSend = async () => {
+    if (!title.trim()) {
+      setTitleError("Please enter a notification title.");
+      return;
+    }
+    setTitleError("");
+
     if (!message.trim()) {
       setError("Please enter a notification message.");
       return;
@@ -85,6 +94,7 @@ export default function NotificationPage() {
           },
           body: JSON.stringify({
             course_id: id,
+            title: title.trim(),
             message: message.trim(),
           }),
         }
@@ -125,30 +135,47 @@ export default function NotificationPage() {
               <Bell className="text-teal-600" size={24} />
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-gray-800">
-                Send Notification
-              </h1>
+              <h1 className="text-3xl font-bold text-gray-800">Send Notification</h1>
               <p className="text-gray-600">
                 Send a message to all students in {courseTitle || "this course"}
               </p>
             </div>
           </div>
         </div>
+
         <div className="bg-white rounded-2xl shadow-sm p-6 sm:p-8">
           <div className="mb-6">
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Course
             </label>
             <div className="px-4 py-3 bg-gray-50 rounded-lg border border-gray-200">
-              <p className="font-medium text-gray-800">
-                {courseTitle || "Loading course..."}
-              </p>
+              <p className="font-medium text-gray-800">{courseTitle || "Loading course..."}</p>
               <p className="text-sm text-gray-500 mt-1">
                 Only students registered in this course will receive your message
               </p>
             </div>
           </div>
 
+          {/* Title Field */}
+          <div className="mb-6">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Notification Title <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              value={title}
+              onChange={handleTitleChange}
+              placeholder="Enter notification title"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:border-teal-500 focus:ring-2 focus:ring-teal-200 focus:outline-none"
+              maxLength={100}
+            />
+            <p className="text-sm text-gray-500 mt-1">{title.length}/100 characters</p>
+            {titleError && (
+              <p className="text-red-700 mt-1 text-sm">{titleError}</p>
+            )}
+          </div>
+
+          {/* Message Field */}
           <div className="mb-6">
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Notification Message <span className="text-red-500">*</span>
@@ -171,6 +198,7 @@ export default function NotificationPage() {
             </div>
           </div>
 
+          {/* Tips */}
           <div className="mb-8 p-4 bg-blue-50 rounded-lg border border-blue-100">
             <h3 className="font-medium text-blue-800 mb-2 flex items-center gap-2">
               <Bell size={16} /> Tips for effective notifications:
@@ -203,7 +231,7 @@ export default function NotificationPage() {
             </button>
             <button
               onClick={handleSend}
-              disabled={loading || !message.trim()}
+              disabled={loading || !message.trim() || !title.trim()}
               className="px-6 py-3 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 flex-1"
             >
               {loading ? (

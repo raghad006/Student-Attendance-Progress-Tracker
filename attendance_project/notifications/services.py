@@ -5,17 +5,24 @@ from .models import Notification
 class NotificationService:
 
     @staticmethod
-    def notify_user(user, message):
-        Notification.objects.create(user=user, message=message)
+    def notify_user(user, message, sender=None, course_title=None):
+        Notification.objects.create(
+        user=user,
+        message=message,
+        sender=sender,
+        course_title=course_title
+    )
 
         channel_layer = get_channel_layer()
         async_to_sync(channel_layer.group_send)(
-            f"user_{user.id}",
-            {
-                "type": "send_notification",
-                "message": message
-            }
-        )
+        f"user_{user.id}",
+        {
+            "type": "send_notification",
+            "message": message,
+            "sender": sender.username if sender else None,
+            "course": course_title
+        }
+    )
 
 class NotificationSubject:
 
