@@ -31,7 +31,7 @@ export default function Dashboard() {
 
       try {
         const res = await fetch(
-          "http://localhost:8000/api/students/teacher/dashboard/",
+          "http://localhost:8080/api/students/teacher/dashboard/",
           {
             headers: {
               "Content-Type": "application/json",
