@@ -33,16 +33,12 @@ const PrivateRoute = ({ children, role }) => {
   if (loading) return <div>Loading...</div>;
   if (!authorized) return <Navigate to="/login" replace />;
 
-  if (user?.role === "STU") {
-    return (
-      <>
-        <Header userType="student" />
-        {children}
-      </>
-    );
-  }
-
-  return children;
+  return (
+    <>
+      <Header userType={user?.role === "TCR" ? "teacher" : "student"} />
+      {children}
+    </>
+  );
 };
 
 function App() {
@@ -61,7 +57,7 @@ function App() {
           }
         />
         <Route
-          path="/biology"
+          path="/teacher/courses/:id"
           element={
             <PrivateRoute role="TCR">
               <BiologyPage />
@@ -69,7 +65,7 @@ function App() {
           }
         />
         <Route
-          path="/attendance"
+          path="/teacher/courses/:id/attendance"
           element={
             <PrivateRoute role="TCR">
               <AttendancePage />
@@ -93,7 +89,6 @@ function App() {
             </PrivateRoute>
           }
         />
-
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>

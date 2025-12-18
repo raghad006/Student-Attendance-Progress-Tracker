@@ -10,19 +10,20 @@ class StudentDataForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
         self.fields['student'].queryset = User.objects.filter(role='STU')
 
 @admin.register(StudentData)
 class StudentDataAdmin(admin.ModelAdmin):
     form = StudentDataForm
     list_display = ('student', 'last_updated', 'course_list')
-    filter_horizontal = ('courses',) 
+    filter_horizontal = ('courses',)
     def course_list(self, obj):
         return ", ".join(course.title for course in obj.courses.all())
     course_list.short_description = 'Courses'
 
 @admin.register(Course)
 class CourseAdmin(admin.ModelAdmin):
-    list_display = ('title', 'created_at')
+    list_display = ('title', 'teacher', 'current_student_count', 'max_students', 'created_at')
     search_fields = ('title',)
+    list_filter = ('teacher',)
+    autocomplete_fields = ('teacher',)
