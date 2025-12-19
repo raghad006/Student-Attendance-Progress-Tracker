@@ -32,7 +32,7 @@ Web Application
 - Frontend: React.js  
 - Backend: Django + Django REST Framework  
 - Authentication: JWT (JSON Web Tokens)  
-- Database: PostgreSQL / SQLite  
+- Database: MySQL / SQLite  
 - Admin Panel: Django Admin  
 
 ---
