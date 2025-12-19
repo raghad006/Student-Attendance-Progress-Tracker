@@ -317,7 +317,7 @@ export default function AllNotificationsPage() {
         <div className="max-w-4xl mx-auto">
           <div className="flex items-center justify-between mb-8">
             <button 
-              onClick={() => navigate("/teacher")} 
+              onClick={() => navigate(-1)} 
               className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
             >
               <ArrowLeft size={20} /> 
