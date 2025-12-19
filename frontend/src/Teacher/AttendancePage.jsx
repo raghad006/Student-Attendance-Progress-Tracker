@@ -263,52 +263,6 @@ const AttendancePage = () => {
     }
   };
 
-  const handleSaveAttendance = async () => {
-    try {
-      setIsSaving(true);
-      const token = getToken();
-      
-      if (!token) {
-        navigate("/login");
-        return;
-      }
-
-      const payload = {
-        course_id: parseInt(courseId),
-        date: selectedDate,
-        records: students.map((s) => ({
-          student_id: s.id,
-          status: statusMap[s.attendance],
-          notes: s.note || "",
-        })),
-      };
-
-      await axios.post("http://localhost:8000/api/attendance/take/", payload, {
-        headers: { 
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-      });
-
-      await fetchStudentsAndAttendance();
-      showSaveStatus("Attendance saved successfully!");
-
-    } catch (error) {
-      console.error("Save error details:", error);
-      
-      if (error.response?.status === 401) {
-        alert("Your session has expired. Please log in again.");
-        navigate("/login");
-      } else if (error.response?.data) {
-        alert(`Failed to save attendance: ${JSON.stringify(error.response.data)}`);
-      } else {
-        alert(`Failed to save attendance: ${error.message}`);
-      }
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
   const showSaveStatus = (message) => {
     setSaveStatus(message);
     setTimeout(() => {
@@ -437,24 +391,6 @@ const AttendancePage = () => {
             >
               <CheckCircle className="w-4 h-4" />
               Mark All Present
-            </button>
-
-            <button
-              onClick={handleSaveAttendance}
-              className="bg-green-600 text-white px-6 py-2 rounded-xl hover:bg-green-700 transition-colors flex items-center gap-2"
-              disabled={isLoading || isSaving}
-            >
-              {isSaving ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                  Saving...
-                </>
-              ) : (
-                <>
-                  <CheckCircle className="w-4 h-4" />
-                  Save All Attendance
-                </>
-              )}
             </button>
 
             <button
