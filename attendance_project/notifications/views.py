@@ -6,6 +6,7 @@ from .serializers import NotificationSerializer
 from students.models import Course
 from notifications.CourseSubject import CourseSubject
 from django.contrib.auth import get_user_model
+from rest_framework.permissions import IsAuthenticated
 
 User = get_user_model()
 
@@ -27,11 +28,14 @@ class MarkNotificationReadView(APIView):
         except Notification.DoesNotExist:
             return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
 class SendCourseNotificationView(APIView):
+    permission_classes = [IsAuthenticated]
+
     def post(self, request):
         course_id = request.data.get("course_id")
         message = request.data.get("message")
-        title = request.data.get("title", "Notification") 
-        sender=request.user
+        title = request.data.get("title", "Notification")
+        sender = request.user
+
         if not course_id or not message:
             return Response(
                 {"detail": "course_id and message are required."},
@@ -49,15 +53,19 @@ class SendCourseNotificationView(APIView):
             if course.teacher:
                 subject.attach_teacher(course.teacher)
 
-            subject.notify(message, title=title, course=course, sender=sender)
+            subject.notify(message, title=title, sender=sender)
 
-
-            return Response({"detail": "Notifications sent."}, status=status.HTTP_201_CREATED)
+            return Response(
+                {"detail": "Notifications sent."},
+                status=status.HTTP_201_CREATED
+            )
 
         except Course.DoesNotExist:
-            return Response({"detail": "Course not found."}, status=status.HTTP_404_NOT_FOUND)
-        except Exception as e:
-            return Response({"detail": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response(
+                {"detail": "Course not found."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
     
 class MarkAllReadView(APIView):
     def post(self, request):
