@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate , useParams} from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { BookOpen, Users, User } from "lucide-react";
 import "react-circular-progressbar/dist/styles.css";
 import Header from "../components/Header";
@@ -8,7 +8,6 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
-  const { id: courseId } = useParams();
 
   const getCourseGradient = (courseId) => {
     const gradients = [
