@@ -64,16 +64,23 @@ class MarkAllReadView(APIView):
         Notification.objects.filter(user=request.user, is_read=False).update(is_read=True)
         return Response({"detail": "All notifications marked as read."}, status=status.HTTP_200_OK)
 class SentNotificationListView(APIView):
-    def get(self, request, *args, **kwargs):
+    def get(self, request):
         notifications = Notification.objects.filter(sender=request.user)
-        data = [
-            {
+        data = []
+
+        for n in notifications:
+            recipients = Notification.objects.filter(
+                title=n.title, created_at=n.created_at, sender=n.sender
+            ).exclude(user=n.sender)
+            
+            data.append({
                 "id": n.id,
                 "title": n.title,
                 "message": n.message,
                 "course_title": n.course.title if n.course else None,
                 "created_at": n.created_at,
-            }
-            for n in notifications.distinct()
-        ]
+                "recipient_count": recipients.count(),
+                "recipient_ids": list(recipients.values_list('id', flat=True))
+            })
+
         return Response(data)

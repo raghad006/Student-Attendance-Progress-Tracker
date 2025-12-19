@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { ArrowLeft, Bell, Calendar, BookOpen, CheckCircle, Filter, Send, Inbox } from "lucide-react";
+import { ArrowLeft, Bell, Calendar, BookOpen, CheckCircle, Filter, Send, Inbox, Users } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 export default function AllNotificationsPage() {
@@ -10,9 +10,64 @@ export default function AllNotificationsPage() {
   const navigate = useNavigate();
   const [tab, setTab] = useState("inbox");
 
-  const unreadCount = notifications.filter(n => !n.is_read).length;
+  const processSentNotifications = (notifs) => {
+    if (tab === "inbox") return notifs;
+    
+    const grouped = {};
+    
+    notifs.forEach(notif => {
+      const timestamp = notif.created_at ? new Date(notif.created_at).getTime() : 0;
+      const key = `${Math.floor(timestamp / 60000)}_${notif.title || notif.message?.substring(0, 50)}`;
+      
+      if (!grouped[key]) {
+        grouped[key] = {
+          ...notif,
+          recipients: [],
+          recipientCount: 0,
+          allIds: [], 
+          isSentTab: true 
+        };
+      }
+      
+      if (notif.id && !grouped[key].allIds.includes(notif.id)) {
+        grouped[key].allIds.push(notif.id);
+      }
+      
+      if (notif.recipient_name || notif.recipient_email) {
+        const recipientInfo = {
+          name: notif.recipient_name || "Recipient",
+          email: notif.recipient_email,
+          role: notif.recipient_role
+        };
+        
+        const existing = grouped[key].recipients.find(
+          r => r.email === recipientInfo.email
+        );
+        if (!existing) {
+          grouped[key].recipients.push(recipientInfo);
+          grouped[key].recipientCount++;
+        }
+      } else {
+        grouped[key].recipientCount++;
+      }
+    });
+    
+    const result = Object.values(grouped).sort((a, b) => {
+      const timeA = a.created_at ? new Date(a.created_at).getTime() : 0;
+      const timeB = b.created_at ? new Date(b.created_at).getTime() : 0;
+      return timeB - timeA;
+    });
+    
+    return result;
+  };
 
-  const filteredNotifications = notifications.filter(n => {
+  const processedNotifications = processSentNotifications(notifications);
+  
+  const unreadCount = tab === "inbox" 
+    ? processedNotifications.filter(n => !n.is_read).length 
+    : 0;
+  
+  const filteredNotifications = processedNotifications.filter(n => {
     if (filter === "all") return true;
     if (filter === "unread") return !n.is_read;
     return true;
@@ -114,21 +169,28 @@ export default function AllNotificationsPage() {
   }, [tab]);
 
   const handleMarkAsRead = async (id) => {
-    const token = localStorage.getItem("access_token");
-    try {
-      const res = await fetch(`http://localhost:8000/api/notifications/${id}/mark-read/`, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-      });
-      if (res.ok) {
-        setNotifications(prev => prev.map(n => n.id === id ? { ...n, is_read: true } : n));
-      }
-    } catch (err) {
-      console.error("Failed to mark notification as read:", err);
+  if (tab !== "inbox") return;
+
+  const token = localStorage.getItem("access_token");
+  try {
+    const res = await fetch(`http://localhost:8000/api/notifications/${id}/mark-read/`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+    });
+    if (res.ok) {
+      setNotifications(prev =>
+        prev.map(n => n.id === id ? { ...n, is_read: true } : n)
+      );
     }
-  };
+  } catch (err) {
+    console.error("Failed to mark notification as read:", err);
+  }
+};
+
 
   const handleMarkAllAsRead = async () => {
+    if (tab !== "inbox") return;
+    
     const token = localStorage.getItem("access_token");
     if (!token || unreadCount === 0) return;
 
@@ -145,10 +207,15 @@ export default function AllNotificationsPage() {
 
       if (res.ok) {
         setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
+        
         alert("All notifications marked as read!");
+      } else {
+        const errorData = await res.json();
+        console.error("Failed to mark all as read:", errorData);
+        alert(`Failed to mark all as read: ${errorData.detail || 'Unknown error'}`);
       }
     } catch (err) {
-      console.error("Failed to mark all as read:", err);
+      console.error("Network error marking all as read:", err);
       alert("Network error. Please try again.");
     } finally {
       setMarkingAll(false);
@@ -179,7 +246,7 @@ export default function AllNotificationsPage() {
 
   const getSenderDisplay = (notification) => {
     if (tab === "sent") {
-      return notification.recipient_name || notification.recipient_email || "Recipient";
+      return "You";
     }
     return notification.sender || "System";
   };
@@ -212,15 +279,34 @@ export default function AllNotificationsPage() {
     return tab === "sent" ? "Sent Notification" : "New Notification";
   };
 
-  const getRecipientInfo = (notification) => {
-    if (tab === "sent") {
+  const getRecipientDisplay = (notification) => {
+    if (tab !== "sent") return null;
+    
+    if (notification.recipients && notification.recipients.length > 0) {
+      if (notification.recipientCount === 1) {
+        const recipient = notification.recipients[0];
+        return {
+          text: recipient.name,
+          email: recipient.email,
+          count: 1
+        };
+      } else {
+        return {
+          text: `${notification.recipientCount} recipients`,
+          count: notification.recipientCount
+        };
+      }
+    } else if (notification.recipientCount > 0) {
       return {
-        name: notification.recipient_name || "Recipient",
-        email: notification.recipient_email,
-        isInstructor: notification.recipient_role === "instructor"
+        text: `${notification.recipientCount} recipients`,
+        count: notification.recipientCount
       };
     }
-    return null;
+    
+    return {
+      text: "Recipients",
+      count: 0
+    };
   };
 
   return (
@@ -244,7 +330,6 @@ export default function AllNotificationsPage() {
             <div className="w-20"></div>
           </div>
 
-          {/* Tabs */}
           <div className="flex gap-4 mb-6">
             <button
               onClick={() => setTab("inbox")}
@@ -272,6 +357,11 @@ export default function AllNotificationsPage() {
             >
               <Send size={18} />
               Sent
+              {tab === "sent" && processedNotifications.length > 0 && (
+                <span className="ml-1 px-2 py-0.5 text-xs bg-white text-blue-600 rounded-full">
+                  {processedNotifications.length}
+                </span>
+              )}
             </button>
           </div>
 
@@ -279,8 +369,8 @@ export default function AllNotificationsPage() {
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div className="flex items-center gap-6">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Total</p>
-                  <p className="text-2xl font-bold text-gray-900">{notifications.length}</p>
+                  <p className="text-sm font-medium text-gray-600">Messages</p>
+                  <p className="text-2xl font-bold text-gray-900">{processedNotifications.length}</p>
                 </div>
                 <div className="h-8 w-px bg-gray-300"></div>
                 <div>
@@ -290,7 +380,7 @@ export default function AllNotificationsPage() {
                   <p className={`text-2xl font-bold ${
                     tab === "inbox" ? "text-blue-600" : "text-gray-900"
                   }`}>
-                    {tab === "inbox" ? unreadCount : notifications.length}
+                    {tab === "inbox" ? unreadCount : processedNotifications.length}
                   </p>
                 </div>
               </div>
@@ -351,16 +441,16 @@ export default function AllNotificationsPage() {
               </div>
             ) : (
               <div className="divide-y divide-gray-100">
-                {filteredNotifications.map(notification => {
+                {filteredNotifications.map((notification, index) => {
                   const courseDisplay = getCourseDisplay(notification);
                   const displayTitle = getDisplayTitle(notification);
                   const isSystem = getSenderDisplay(notification) === "System";
                   const hasCourse = hasCourseInfo(notification);
-                  const recipientInfo = getRecipientInfo(notification);
+                  const recipientInfo = getRecipientDisplay(notification);
                   
                   return (
                     <div 
-                      key={notification.id} 
+                      key={notification.allIds?.join('_') || notification.id || index}
                       className={`p-5 transition-colors border-l-4 ${
                         notification.is_read 
                           ? "border-transparent hover:border-gray-300 hover:bg-gray-50" 
@@ -415,9 +505,10 @@ export default function AllNotificationsPage() {
                                   </span>
                                 )}
                                 
-                                {tab === "sent" && recipientInfo && recipientInfo.isInstructor && (
-                                  <span className="text-xs font-normal text-gray-500 px-2 py-0.5 bg-gray-100 rounded-full">
-                                    Instructor
+                                {tab === "sent" && recipientInfo && recipientInfo.count > 1 && (
+                                  <span className="text-xs font-medium text-purple-600 px-2 py-0.5 bg-purple-100 rounded-full flex items-center gap-1">
+                                    <Users size={12} />
+                                    {recipientInfo.text}
                                   </span>
                                 )}
                                 
@@ -428,13 +519,16 @@ export default function AllNotificationsPage() {
                                 )}
                               </div>
 
-                              {tab === "sent" && recipientInfo && (
+                              {tab === "sent" && recipientInfo && recipientInfo.count === 1 && (
                                 <div className="mt-2 text-sm">
-                                  <p className="text-gray-600">
-                                    <span className="font-medium">To: </span>
-                                    {recipientInfo.name}
-                                    {recipientInfo.email && ` (${recipientInfo.email})`}
-                                  </p>
+                                  <div className="flex items-center gap-2">
+                                    <Users size={14} className="text-gray-500" />
+                                    <p className="text-gray-600">
+                                      <span className="font-medium">To: </span>
+                                      {recipientInfo.text}
+                                      {recipientInfo.email && ` (${recipientInfo.email})`}
+                                    </p>
+                                  </div>
                                 </div>
                               )}
                             </div>
@@ -488,7 +582,7 @@ export default function AllNotificationsPage() {
           {filteredNotifications.length > 0 && !loading && (
             <div className="mt-6 text-center">
               <p className="text-sm text-gray-500">
-                Showing {filteredNotifications.length} of {notifications.length} {tab} notification{notifications.length !== 1 ? 's' : ''}
+                Showing {filteredNotifications.length} of {processedNotifications.length} {tab} notification{processedNotifications.length !== 1 ? 's' : ''}
                 {filter !== "all" && ` (filtered by ${filter})`}
               </p>
             </div>
