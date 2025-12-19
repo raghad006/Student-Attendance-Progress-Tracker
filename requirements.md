@@ -36,7 +36,55 @@ Web Application
 - Admin Panel: Django Admin  
 
 ---
+## Continuous Integration (CI) & Automation
+### CI Tools & Configuration
+- CI Platform: GitHub Actions
+- Configuration Format: YAML
+- Backend Framework: Django
+- Frontend Framework: React.js
+- Database (CI Environment): MySQL
 
+### Authentication CI
+#### Functional Requirements
+
+- The system shall automatically trigger the Authentication CI pipeline on push or pull request to the Authentication branch.
+- The system shall create a temporary MySQL database for authentication testing.
+- The system shall install backend dependencies automatically.
+- The system shall run database migrations before executing authentication tests.
+- The system shall execute automated tests for the accounts module
+#### Non-Functional Requirements
+
+- The CI pipeline shall ensure isolation between test and production databases.
+- The system shall use environment variables to manage sensitive data.
+- The pipeline shall fail if any authentication test fails.
+
+### Frontend CI
+#### Functional Requirements
+
+- The system shall automatically trigger the Frontend CI pipeline on push or pull request to the student_dashboard branch.
+- The system shall install frontend dependencies using Node.js.
+- The system shall build the React application to verify frontend correctness.
+- The pipeline shall fail if the build process fails.
+
+#### Non-Functional Requirements
+
+- The CI pipeline shall ensure frontend build consistency.
+- The system shall detect frontend errors early.
+- The build process shall be reproducible across environments.
+
+### Student Dashboard CI
+#### Functional Requirements
+
+- The system shall trigger a backend CI pipeline for the Student Dashboard module.
+- The system shall provision a MySQL service for backend testing.
+- The system shall run database migrations before executing tests.
+- The system shall execute automated tests for the students module.
+
+#### Non-Functional Requirements
+
+- The CI pipeline shall validate student-related backend features.
+- The system shall ensure database integrity during tests.
+- The pipeline shall prevent regressions in student dashboard functionality.
 # Project Requirements
 
 ## Functional Requirements
@@ -91,8 +139,9 @@ Web Application
 
 ### Maintainability
 - The system shall follow modular architecture.  
-- Code shall be readable and documented.  
-
+- Code shall be readable and documented.
+- The system shall use automated CI pipelines to improve maintainability and code quality.
+ 
 ---
 
 ## Constraints
