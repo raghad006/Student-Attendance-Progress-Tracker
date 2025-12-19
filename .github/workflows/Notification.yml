@@ -6,9 +6,11 @@ on:
   pull_request:
     branches: ["main", "Notification+observer"]
 
+
 jobs:
   backend:
     runs-on: ubuntu-latest
+
     services:
       mysql:
         image: mysql:8.0
@@ -20,11 +22,11 @@ jobs:
         ports:
           - 3306:3306
         options: >-
-          --health-cmd="mysqladmin ping -h 127.0.0.1 -u root -prootpassword"
+          --health-cmd=mysqladmin ping -h 127.0.0.1 -uroot -prootpassword
           --health-interval=10s
           --health-timeout=5s
           --health-retries=5
-    
+
     env:
       DEBUG: 1
       SECRET_KEY: django-insecure-test-key-for-ci
@@ -33,14 +35,16 @@ jobs:
       DB_PASSWORD: test_password
       DB_HOST: 127.0.0.1
       DB_PORT: 3306
-    
+
     steps:
-      - uses: actions/checkout@v3
-      
-      - uses: actions/setup-python@v4
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
         with:
           python-version: 3.12
-      
+
       - name: Install dependencies
         run: |
           sudo apt-get update
@@ -48,10 +52,15 @@ jobs:
           cd attendance_project
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-      
-      - name: Wait for MySQL
-        run: sleep 10
-      
+
+      - name: Wait for MySQL to be ready
+        run: |
+          for i in {30..0}; do
+            mysqladmin ping -h 127.0.0.1 -uroot -prootpassword && break
+            echo 'Waiting for MySQL...'
+            sleep 1
+          done
+
       - name: Setup MySQL permissions
         run: |
           mysql -h 127.0.0.1 -u root -prootpassword -e "
@@ -60,12 +69,12 @@ jobs:
           GRANT ALL PRIVILEGES ON *.* TO 'test_user'@'%';
           FLUSH PRIVILEGES;
           "
-      
+
       - name: Run migrations
         run: |
           cd attendance_project
           python manage.py migrate
-      
+
       - name: Run backend tests
         run: |
           cd attendance_project
