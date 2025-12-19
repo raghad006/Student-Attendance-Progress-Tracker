@@ -15,3 +15,6 @@ class CourseSubject(Subject):
     def attach_teacher(self, teacher_user):
         if teacher_user:
             self.attach(UserObserver(teacher_user, sender=teacher_user))
+    def notify(self, message, title="Notification", sender=None):
+        for observer in self._observers:
+            observer.update(message=message, title=title, sender=sender, course=self.course)

@@ -9,11 +9,12 @@ class UserObserver(Observer):
     def update(self, message: str, **kwargs):
         title = kwargs.get('title', 'Notification')
         course = kwargs.get('course', None)
-        
+        sender = kwargs.get('sender', self.sender)
+
         NotificationService.notify_user(
             self.user,
             message,
-            sender=self.sender,
+            sender=sender,
             course=course,
             title=title
         )

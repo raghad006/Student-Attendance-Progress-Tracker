@@ -11,7 +11,9 @@ User = get_user_model()
 
 class NotificationListView(APIView):
     def get(self, request):
-        notifications = Notification.objects.filter(user=request.user).order_by("-created_at")
+        notifications = Notification.objects.filter(user=request.user)\
+            .exclude(sender=request.user)\
+            .order_by("-created_at")
         serializer = NotificationSerializer(notifications, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -29,7 +31,7 @@ class SendCourseNotificationView(APIView):
         course_id = request.data.get("course_id")
         message = request.data.get("message")
         title = request.data.get("title", "Notification") 
-
+        sender=request.user
         if not course_id or not message:
             return Response(
                 {"detail": "course_id and message are required."},
@@ -47,7 +49,8 @@ class SendCourseNotificationView(APIView):
             if course.teacher:
                 subject.attach_teacher(course.teacher)
 
-            subject.notify(message, title=title, course=course)
+            subject.notify(message, title=title, course=course, sender=sender)
+
 
             return Response({"detail": "Notifications sent."}, status=status.HTTP_201_CREATED)
 
@@ -60,3 +63,17 @@ class MarkAllReadView(APIView):
     def post(self, request):
         Notification.objects.filter(user=request.user, is_read=False).update(is_read=True)
         return Response({"detail": "All notifications marked as read."}, status=status.HTTP_200_OK)
+class SentNotificationListView(APIView):
+    def get(self, request, *args, **kwargs):
+        notifications = Notification.objects.filter(sender=request.user)
+        data = [
+            {
+                "id": n.id,
+                "title": n.title,
+                "message": n.message,
+                "course_title": n.course.title if n.course else None,
+                "created_at": n.created_at,
+            }
+            for n in notifications.distinct()
+        ]
+        return Response(data)
