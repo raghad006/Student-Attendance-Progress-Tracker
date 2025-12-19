@@ -1,23 +1,67 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
 # dependencies
-/node_modules
-/.pnp
+/node_modules/
+.pnp/
 .pnp.js
+/.yarn/*
+/.yarn/cache
+/.yarn/unplugged
+/.yarn/build-state.yml
+/.yarn/install-state.gz
+/.yarn/releases/
 
 # testing
-/coverage
+/coverage/
 
 # production
-/build
+/build/
 
 # misc
 .DS_Store
+.env
 .env.local
 .env.development.local
 .env.test.local
 .env.production.local
-
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+pnpm-debug.log*
+
+# Editor directories and files
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# OS files
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Optional npm cache folder
+.npm/
+
+# Optional REACT/CRA folders
+.cache/
+# Django
+*.pyc
+__pycache__/
+db.sqlite3
+
+# Ignore virtual environments
+venv/
+.env
+
+# Ignore local settings
+local_settings.py
+
+# Do NOT ignore migrations for production:
+# If you want to ignore migrations (not recommended), use:
+# */migrations/*.py
+# !*/migrations/__init__.py
+
