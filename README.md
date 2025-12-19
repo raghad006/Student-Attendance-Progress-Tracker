@@ -23,8 +23,7 @@ Allows students to track attendance, teachers to mark attendance, and admins to 
 - Frontend: React.js
 - Backend: Django, Django REST Framework
 - Authentication: JWT Tokens
-- Database: SQLite / PostgreSQL
-
+- Database: MySQL / SQLite
 ## Installation
 1. Clone the repository: https://github.com/raghad006/Student-Attendance-Progress-Tracker.git
 2. Backend:
