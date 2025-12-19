@@ -2,9 +2,9 @@ name: Notification CI
 
 on:
   push:
-    branches: [main, "Notification+observer"]
+    branches: ["main", "Notification+observer"]
   pull_request:
-    branches: [main, "Notification+observer"]
+    branches: ["main", "Notification+observer"]
 
 jobs:
   backend:
