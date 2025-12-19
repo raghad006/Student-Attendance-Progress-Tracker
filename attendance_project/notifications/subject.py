@@ -13,6 +13,6 @@ class Subject:
         if observer in self._observers:
             self._observers.remove(observer)
 
-    def notify(self, message: str):
+    def notify(self, message: str, **kwargs):
         for observer in self._observers:
-            observer.update(message)
+            observer.update(message, **kwargs)

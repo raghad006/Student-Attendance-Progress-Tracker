@@ -24,11 +24,11 @@ class MarkNotificationReadView(APIView):
             return Response({"detail": "Notification marked as read."}, status=status.HTTP_200_OK)
         except Notification.DoesNotExist:
             return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
-
 class SendCourseNotificationView(APIView):
     def post(self, request):
         course_id = request.data.get("course_id")
         message = request.data.get("message")
+        title = request.data.get("title", "Notification") 
 
         if not course_id or not message:
             return Response(
@@ -47,7 +47,7 @@ class SendCourseNotificationView(APIView):
             if course.teacher:
                 subject.attach_teacher(course.teacher)
 
-            subject.notify(message)
+            subject.notify(message, title=title, course=course)
 
             return Response({"detail": "Notifications sent."}, status=status.HTTP_201_CREATED)
 
@@ -55,6 +55,7 @@ class SendCourseNotificationView(APIView):
             return Response({"detail": "Course not found."}, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
             return Response({"detail": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
 class MarkAllReadView(APIView):
     def post(self, request):
         Notification.objects.filter(user=request.user, is_read=False).update(is_read=True)

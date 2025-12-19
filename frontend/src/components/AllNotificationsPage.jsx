@@ -19,10 +19,7 @@ export default function AllNotificationsPage() {
 
   const fetchNotifications = useCallback(async () => {
     const token = localStorage.getItem("access_token");
-    if (!token) {
-      navigate("/login");
-      return;
-    }
+    if (!token) return navigate("/login");
 
     setLoading(true);
     try {
@@ -53,13 +50,17 @@ export default function AllNotificationsPage() {
     if (!token) return;
 
     const wsProtocol = window.location.protocol === "https:" ? "wss" : "ws";
-    const ws = new WebSocket(`${wsProtocol}://localhost:8000/ws/notifications/`);
+    const wsUrl = `${wsProtocol}://localhost:8000/ws/notifications/?token=${encodeURIComponent(token)}`;
+    
+    const ws = new WebSocket(wsUrl);
 
-    ws.onopen = () => console.log("WebSocket connected for notifications");
+    ws.onopen = () => {
+    };
 
     ws.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
+        
         if (data.type === "new_notification") {
           setNotifications(prev => [data.notification, ...prev]);
         } else if (data.type === "notification_read") {
@@ -74,10 +75,15 @@ export default function AllNotificationsPage() {
       }
     };
 
-    ws.onerror = (error) => console.error("WebSocket error:", error);
-    ws.onclose = () => console.log("WebSocket closed");
+    ws.onerror = (error) => {
+      console.error("WebSocket error:", error);
+    };
 
-    return () => ws.close();
+    return () => {
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.close();
+      }
+    };
   }, []);
 
   const handleMarkAsRead = async (id) => {
@@ -111,16 +117,8 @@ export default function AllNotificationsPage() {
       });
 
       if (res.ok) {
-        const data = await res.json();
-        console.log("Mark all as read response:", data);
-        
         setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
-        
         alert("All notifications marked as read!");
-      } else {
-        const errorData = await res.json();
-        console.error("Failed to mark all as read:", errorData);
-        alert(`Error: ${errorData.detail || "Failed to mark all as read"}`);
       }
     } catch (err) {
       console.error("Failed to mark all as read:", err);
@@ -144,12 +142,43 @@ export default function AllNotificationsPage() {
     if (diffHours < 24) return `${diffHours}h ago`;
     if (diffDays < 7) return `${diffDays}d ago`;
 
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+    return date.toLocaleDateString('en-US', { 
+      month: 'short', 
+      day: 'numeric', 
+      hour: '2-digit', 
+      minute: '2-digit' 
+    });
   };
 
   const getSenderDisplay = (notification) => notification.sender || "System";
-  const getCourseDisplay = (notification) => notification.course_title || "General";
-  const hasCourseInfo = (notification) => !!notification.course_title;
+  
+  const getCourseDisplay = (notification) => {
+    if (notification.course_title && notification.course_title !== "General") {
+      return notification.course_title;
+    }
+    return null;
+  };
+  
+  const hasCourseInfo = (notification) => 
+    !!notification.course_title && notification.course_title !== "General";
+  
+  const getDisplayTitle = (notification) => {
+    if (notification.title && notification.title !== "Notification") {
+      return notification.title;
+    }
+    
+    if (hasCourseInfo(notification)) {
+      return `${notification.course_title} Update`;
+    }
+    
+    if (notification.message) {
+      return notification.message.length > 50 
+        ? `${notification.message.substring(0, 50)}...`
+        : notification.message;
+    }
+    
+    return "New Notification";
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -159,18 +188,16 @@ export default function AllNotificationsPage() {
         <div className="max-w-4xl mx-auto">
           <div className="flex items-center justify-between mb-8">
             <button 
-              onClick={() => navigate(-1)} 
+              onClick={() => navigate("/teacher")} 
               className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
             >
               <ArrowLeft size={20} /> 
               <span>Back</span>
             </button>
-            
             <div className="flex items-center gap-3">
               <Bell className="text-gray-600" size={24} />
               <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Notifications</h1>
             </div>
-            
             <div className="w-20"></div>
           </div>
 
@@ -189,20 +216,13 @@ export default function AllNotificationsPage() {
               </div>
 
               <div className="flex items-center gap-4">
-                <div className="relative">
-                  <button 
-                    onClick={() => setFilter(prev => 
-                      prev === "all" ? "unread" : 
-                      "all" )}
-                    className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-800 hover:bg-gray-50 rounded-lg border border-gray-300 transition-colors"
-                  >
-                    <Filter size={16} />
-                    <span className="capitalize">
-                      {filter === "all" && "All"}
-                      {filter === "unread" && "Unread"}
-                    </span>
-                  </button>
-                </div>
+                <button 
+                  onClick={() => setFilter(prev => prev === "all" ? "unread" : "all")}
+                  className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-800 hover:bg-gray-50 rounded-lg border border-gray-300 transition-colors"
+                >
+                  <Filter size={16} />
+                  <span className="capitalize">{filter}</span>
+                </button>
 
                 <button 
                   onClick={handleMarkAllAsRead}
@@ -214,10 +234,7 @@ export default function AllNotificationsPage() {
                   }`}
                 >
                   {markingAll ? (
-                    <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-                      Marking...
-                    </>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
                   ) : (
                     <>
                       <CheckCircle size={16} />
@@ -242,104 +259,116 @@ export default function AllNotificationsPage() {
                 <p className="text-gray-500 mb-4">
                   {filter === "all" ? "You don't have any notifications yet." : `No ${filter} notifications found.`}
                 </p>
-                {filter !== "all" && (
-                  <button 
-                    onClick={() => setFilter("all")} 
-                    className="text-blue-600 hover:text-blue-800 font-medium"
-                  >
-                    View all notifications
-                  </button>
-                )}
               </div>
             ) : (
               <div className="divide-y divide-gray-100">
-                {filteredNotifications.map(notification => (
-                  <div 
-                    key={notification.id} 
-                    className={`p-5 transition-colors border-l-4 ${
-                      notification.is_read 
-                        ? "border-transparent hover:border-gray-300 hover:bg-gray-50" 
-                        : "border-blue-500 bg-blue-50 hover:bg-blue-100"
-                    }`}
-                  >
-                    <div className="flex items-start gap-4">
-                      <div className="flex-shrink-0">
-                        <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                          getSenderDisplay(notification) === "System" ? "bg-blue-100" : "bg-green-100"
-                        }`}>
-                          {getSenderDisplay(notification) === "System" ? (
-                            <Bell className="text-blue-600" size={20} />
-                          ) : (
-                            <Calendar className="text-green-600" size={20} />
-                          )}
+                {filteredNotifications.map(notification => {
+                  const courseDisplay = getCourseDisplay(notification);
+                  const displayTitle = getDisplayTitle(notification);
+                  const isSystem = getSenderDisplay(notification) === "System";
+                  const hasCourse = hasCourseInfo(notification);
+                  
+                  return (
+                    <div 
+                      key={notification.id} 
+                      className={`p-5 transition-colors border-l-4 ${
+                        notification.is_read 
+                          ? "border-transparent hover:border-gray-300 hover:bg-gray-50" 
+                          : "border-blue-500 bg-blue-50 hover:bg-blue-100"
+                      }`}
+                    >
+                      <div className="flex items-start gap-4">
+                        <div className="flex-shrink-0">
+                          <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                            isSystem ? "bg-blue-100" : "bg-green-100"
+                          }`}>
+                            {isSystem ? (
+                              <Bell className="text-blue-600" size={20} />
+                            ) : (
+                              <Calendar className="text-green-600" size={20} />
+                            )}
+                          </div>
                         </div>
-                      </div>
 
-                      {/* Content */}
-                      <div className="flex-grow">
-                        <div className="flex items-start justify-between mb-2">
-                          <div>
-                            <div className="flex items-center gap-2">
-                              <p className="font-semibold text-gray-900">{getSenderDisplay(notification)}</p>
-                              {getSenderDisplay(notification) !== "System" && (
-                                <span className="text-xs font-normal text-gray-500 px-2 py-0.5 bg-gray-100 rounded-full">
-                                  Instructor
-                                </span>
+                        <div className="flex-grow">
+                          <div className="flex items-start justify-between mb-2">
+                            <div className="flex-1">
+                              {courseDisplay && (
+                                <div className="mb-2">
+                                  <div className="flex items-center gap-2">
+                                    <BookOpen size={16} className="text-gray-500" />
+                                    <span className="text-lg font-semibold text-gray-900">
+                                      {courseDisplay}
+                                    </span>
+                                  </div>
+                                </div>
                               )}
-                              {!notification.is_read && (
-                                <span className="text-xs font-medium text-blue-600 px-2 py-0.5 bg-blue-100 rounded-full">
-                                  New
+
+                              <p className="text-md font-semibold text-gray-800 mb-1">
+                                {displayTitle}
+                              </p>
+
+                              <div className="flex items-center gap-2 mt-1 flex-wrap">
+                                <p className="text-sm font-medium text-gray-600">
+                                  {getSenderDisplay(notification)}
+                                </p>
+                                
+                                {!isSystem && (
+                                  <span className="text-xs font-normal text-gray-500 px-2 py-0.5 bg-gray-100 rounded-full">
+                                    Instructor
+                                  </span>
+                                )}
+                                {!notification.is_read && (
+                                  <span className="text-xs font-medium text-blue-600 px-2 py-0.5 bg-blue-100 rounded-full">
+                                    New
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+
+                            <div className="flex flex-col items-end">
+                              <span className="text-xs text-gray-500 whitespace-nowrap mb-2">
+                                {formatTime(notification.created_at)}
+                              </span>
+                              {notification.is_read ? (
+                                <span className="text-xs text-green-600 flex items-center gap-1">
+                                  <CheckCircle size={12} /> Read
                                 </span>
+                              ) : (
+                                <span className="text-xs text-gray-500">Unread</span>
                               )}
                             </div>
-                            {hasCourseInfo(notification) && (
-                              <div className="flex items-center gap-2 mt-1">
-                                <BookOpen size={14} className="text-gray-400" />
-                                <span className="text-sm font-medium text-gray-600">
-                                  {getCourseDisplay(notification)}
-                                </span>
-                              </div>
-                            )}
                           </div>
 
-                          <div className="flex flex-col items-end">
-                            <span className="text-xs text-gray-500 whitespace-nowrap mb-2">
-                              {formatTime(notification.created_at || notification.timestamp)}
-                            </span>
-                            {notification.is_read ? (
-                              <span className="text-xs text-green-600 flex items-center gap-1">
-                                <CheckCircle size={12} /> Read
-                              </span>
-                            ) : (
-                              <span className="text-xs text-gray-500">Unread</span>
+                          <div className="mt-3">
+                            <p className="text-gray-800 leading-relaxed">
+                              {notification.message}
+                            </p>
+                          </div>
+
+                          <div className="flex items-center gap-4 mt-3">
+                            {!notification.is_read && (
+                              <button 
+                                onClick={() => handleMarkAsRead(notification.id)} 
+                                className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+                              >
+                                Mark as read
+                              </button>
+                            )}
+                            {hasCourse && notification.course_id && (
+                              <button 
+                                onClick={() => navigate(`/courses/${notification.course_id}`)} 
+                                className="text-sm text-blue-600 hover:text-blue-800 font-medium ml-auto"
+                              >
+                                View course
+                              </button>
                             )}
                           </div>
-                        </div>
-
-                        <p className="text-gray-800 leading-relaxed mb-3">{notification.message}</p>
-
-                        <div className="flex items-center gap-4">
-                          {!notification.is_read && (
-                            <button 
-                              onClick={() => handleMarkAsRead(notification.id)} 
-                              className="text-sm text-blue-600 hover:text-blue-800 font-medium"
-                            >
-                              Mark as read
-                            </button>
-                          )}
-                          {hasCourseInfo(notification) && notification.course_id && (
-                            <button 
-                              onClick={() => navigate(`/courses/${notification.course_id}`)} 
-                              className="text-sm text-blue-600 hover:text-blue-800 font-medium ml-auto"
-                            >
-                              View course
-                            </button>
-                          )}
                         </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
