@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import axios from "axios";
 import { useParams, useNavigate } from "react-router-dom";
 import { ChevronDown, X, Calendar, CheckCircle, XCircle, Clock } from "lucide-react";
@@ -18,110 +18,302 @@ const AttendancePage = () => {
   const [studentTimelines, setStudentTimelines] = useState([]);
   const [selectedStudentTimeline, setSelectedStudentTimeline] = useState(null);
   const [isTimelineModalOpen, setIsTimelineModalOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveStatus, setSaveStatus] = useState("");
+
+  const statusMap = {
+    "Present": "P",
+    "Absent": "A", 
+    "Late": "L"
+  };
 
   const attendanceOptions = ["Present", "Absent", "Late"];
 
-  
-  useEffect(() => {
-    const fetchStudentsAndAttendance = async () => {
-      try {
-        
-        const response = await axios.get(
-          `http://localhost:8000/api/students/courses/${courseId}/students/`,
-          {
-            headers: { Authorization: `Bearer ${localStorage.getItem("access_token")}` },
+  const getToken = () => {
+    return localStorage.getItem("access_token");
+  };
+
+  const fetchStudentsAndAttendance = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      const token = getToken();
+      
+      if (!token) {
+        navigate("/login");
+        return;
+      }
+
+      const studentsResponse = await axios.get(
+        `http://localhost:8000/api/students/courses/${courseId}/students/`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      const studentsList = studentsResponse.data.map((s) => ({
+        id: s.id,
+        name: s.name,
+        attendance: "Absent",
+        note: "",
+      }));
+
+      const attendanceResponse = await axios.get(
+        `http://localhost:8000/api/attendance/stats/${courseId}/`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      const attendanceData = attendanceResponse.data;
+
+      const updatedStudents = studentsList.map((student) => {
+        const studentRecord = attendanceData.find((s) => s.id === student.id);
+        if (studentRecord) {
+          const recordForDate = studentRecord.timeline.find(
+            (r) => r.date === selectedDate
+          );
+          if (recordForDate) {
+            const frontendStatus = recordForDate.status === "Present" ? "Present" :
+                                 recordForDate.status === "Late" ? "Late" : "Absent";
+            
+            return {
+              ...student,
+              attendance: frontendStatus,
+              note: recordForDate.notes || "",
+            };
           }
-        );
+        }
+        return student;
+      });
 
-        const studentsList = response.data.map((s) => ({
-          id: s.id,
-          name: s.name,
-          attendance: "Absent",
-          note: "",
-        }));
+      setStudents(updatedStudents);
+      setStudentTimelines(attendanceData);
+      setSaveStatus("");
 
-        setStudents(studentsList);
-
-        
-        const attendanceResponse = await axios.get(
-          `http://localhost:8000/api/attendance/stats/${courseId}/`,
-          {
-            headers: { Authorization: `Bearer ${localStorage.getItem("access_token")}` },
-          }
-        );
-
-        const attendanceData = attendanceResponse.data;
-
-        
-        const updatedStudents = studentsList.map((student) => {
-          const studentRecord = attendanceData.find((s) => s.id === student.id);
-          if (studentRecord) {
-            const recordForDate = studentRecord.timeline.find(
-              (r) => r.date === selectedDate
-            );
-            if (recordForDate) {
-              return {
-                ...student,
-                attendance: recordForDate.status,
-                note: recordForDate.notes || "",
-              };
-            }
-          }
-          return student;
-        });
-
-        setStudents(updatedStudents);
-        setStudentTimelines(attendanceData); 
-      } catch (error) {
-        console.error(error);
+    } catch (error) {
+      console.error("Fetch error:", error);
+      if (error.response?.status === 401) {
+        alert("Your session has expired. Please log in again.");
+        navigate("/login");
+      } else {
         alert("Failed to fetch students or attendance");
       }
-    };
+    } finally {
+      setIsLoading(false);
+    }
+  }, [courseId, selectedDate, navigate]);
 
+  useEffect(() => {
     fetchStudentsAndAttendance();
-  }, [courseId, selectedDate]);
+  }, [fetchStudentsAndAttendance]);
 
-  
-  const handleAttendanceChange = (index, value) => {
+  const saveStudentAttendance = async (studentId, attendance, note) => {
+    try {
+      const token = getToken();
+      if (!token) {
+        navigate("/login");
+        return false;
+      }
+
+      const payload = {
+        course_id: parseInt(courseId),
+        date: selectedDate,
+        records: [{
+          student_id: studentId,
+          status: statusMap[attendance],
+          notes: note || "",
+        }],
+      };
+
+      await axios.post("http://localhost:8000/api/attendance/take/", payload, {
+        headers: { 
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+      });
+
+      return true;
+    } catch (error) {
+      console.error("Save student error:", error);
+      return false;
+    }
+  };
+
+  const handleAttendanceChange = async (index, value) => {
     const updated = [...students];
+    const student = updated[index];
+    
     updated[index].attendance = value;
     setStudents(updated);
     setOpenDropdownIndex(null);
+
+    const success = await saveStudentAttendance(student.id, value, student.note);
+    
+    if (success) {
+      updateStudentTimeline(student.id, value, student.note);
+      showSaveStatus("Attendance updated successfully!");
+    } else {
+      alert("Failed to save attendance change. Please try again.");
+    }
   };
 
-  const handleNoteChange = (index, value) => {
+  const handleNoteChange = async (index, value) => {
     const updated = [...students];
+    const student = updated[index];
+    
     updated[index].note = value;
     setStudents(updated);
+
+    const success = await saveStudentAttendance(student.id, student.attendance, value);
+    
+    if (success) {
+      updateStudentTimeline(student.id, student.attendance, value);
+      showSaveStatus("Note saved successfully!");
+    }
   };
 
-  const handleMarkAllPresent = () => {
-    setStudents(
-      students.map((student) => ({ ...student, attendance: "Present" }))
-    );
+  const updateStudentTimeline = (studentId, attendance, note) => {
+    setStudentTimelines(prev => prev.map(student => {
+      if (student.id === studentId) {
+        const timeline = [...student.timeline];
+        const existingIndex = timeline.findIndex(item => item.date === selectedDate);
+        
+        const timelineEntry = {
+          date: selectedDate,
+          status: attendance,
+          notes: note || ""
+        };
+
+        if (existingIndex >= 0) {
+          timeline[existingIndex] = timelineEntry;
+        } else {
+          timeline.push(timelineEntry);
+        }
+
+        return {
+          ...student,
+          timeline: timeline.sort((a, b) => new Date(b.date) - new Date(a.date))
+        };
+      }
+      return student;
+    }));
   };
 
-  const handleSaveAttendance = async () => {
+  const handleMarkAllPresent = async () => {
+    const updated = students.map((student) => ({ 
+      ...student, 
+      attendance: "Present" 
+    }));
+    setStudents(updated);
+
     try {
+      setIsSaving(true);
+      const token = getToken();
+      
       const payload = {
-        course_id: courseId,
+        course_id: parseInt(courseId),
         date: selectedDate,
-        records: students.map((s) => ({
+        records: updated.map((s) => ({
           student_id: s.id,
-          status: s.attendance,
-          note: s.note,
+          status: statusMap["Present"],
+          notes: s.note || "",
         })),
       };
 
       await axios.post("http://localhost:8000/api/attendance/take/", payload, {
-        headers: { Authorization: `Bearer ${localStorage.getItem("access_token")}` },
+        headers: { 
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
       });
 
-      alert(`Attendance saved for ${selectedDate}`);
+      setStudentTimelines(prev => prev.map(student => {
+        const updatedStudent = updated.find(s => s.id === student.id);
+        if (updatedStudent) {
+          const timeline = [...student.timeline];
+          const existingIndex = timeline.findIndex(item => item.date === selectedDate);
+          
+          const timelineEntry = {
+            date: selectedDate,
+            status: "Present",
+            notes: updatedStudent.note || ""
+          };
+
+          if (existingIndex >= 0) {
+            timeline[existingIndex] = timelineEntry;
+          } else {
+            timeline.push(timelineEntry);
+          }
+
+          return {
+            ...student,
+            timeline: timeline.sort((a, b) => new Date(b.date) - new Date(a.date))
+          };
+        }
+        return student;
+      }));
+
+      showSaveStatus("All students marked as Present!");
     } catch (error) {
-      console.error(error);
-      alert("Failed to save attendance!");
+      console.error("Save all error:", error);
+      alert("Failed to save attendance for all students.");
+    } finally {
+      setIsSaving(false);
     }
+  };
+
+  const handleSaveAttendance = async () => {
+    try {
+      setIsSaving(true);
+      const token = getToken();
+      
+      if (!token) {
+        navigate("/login");
+        return;
+      }
+
+      const payload = {
+        course_id: parseInt(courseId),
+        date: selectedDate,
+        records: students.map((s) => ({
+          student_id: s.id,
+          status: statusMap[s.attendance],
+          notes: s.note || "",
+        })),
+      };
+
+      await axios.post("http://localhost:8000/api/attendance/take/", payload, {
+        headers: { 
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+      });
+
+      await fetchStudentsAndAttendance();
+      showSaveStatus("Attendance saved successfully!");
+
+    } catch (error) {
+      console.error("Save error details:", error);
+      
+      if (error.response?.status === 401) {
+        alert("Your session has expired. Please log in again.");
+        navigate("/login");
+      } else if (error.response?.data) {
+        alert(`Failed to save attendance: ${JSON.stringify(error.response.data)}`);
+      } else {
+        alert(`Failed to save attendance: ${error.message}`);
+      }
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const showSaveStatus = (message) => {
+    setSaveStatus(message);
+    setTimeout(() => {
+      setSaveStatus("");
+    }, 3000);
   };
 
   const handleViewTimeline = (studentId) => {
@@ -175,7 +367,6 @@ const AttendancePage = () => {
     });
   };
 
-  
   const calculateAttendanceStats = (timeline) => {
     const total = timeline.length;
     const present = timeline.filter(item => item.status === "Present").length;
@@ -197,6 +388,17 @@ const AttendancePage = () => {
       <div className="p-10 w-full max-w-7xl mx-auto bg-gray-50 min-h-screen mt-24">
         <div className="bg-white rounded-3xl shadow-lg p-8 overflow-visible relative">
           
+          {saveStatus && (
+            <div className="fixed top-24 right-10 z-50 animate-fade-in">
+              <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-xl shadow-lg">
+                <div className="flex items-center">
+                  <CheckCircle className="w-5 h-5 mr-2" />
+                  <span>{saveStatus}</span>
+                </div>
+              </div>
+            </div>
+          )}
+
           <div className="flex justify-between items-center mb-8 flex-wrap gap-4">
             <h1 className="text-3xl font-extrabold text-gray-800">Attendance</h1>
 
@@ -220,31 +422,50 @@ const AttendancePage = () => {
             </div>
           </div>
 
-          
+          {isLoading && (
+            <div className="text-center py-4">
+              <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
+              <p className="text-gray-600 mt-2">Loading attendance data...</p>
+            </div>
+          )}
+
           <div className="flex justify-end gap-4 mb-6">
             <button
               onClick={handleMarkAllPresent}
-              className="bg-green-100 text-green-800 px-4 py-2 rounded-xl hover:bg-green-200 transition-colors"
+              className="bg-green-100 text-green-800 px-4 py-2 rounded-xl hover:bg-green-200 transition-colors flex items-center gap-2"
+              disabled={isLoading || isSaving}
             >
+              <CheckCircle className="w-4 h-4" />
               Mark All Present
             </button>
 
             <button
               onClick={handleSaveAttendance}
-              className="bg-green-600 text-white px-6 py-2 rounded-xl hover:bg-green-700 transition-colors"
+              className="bg-green-600 text-white px-6 py-2 rounded-xl hover:bg-green-700 transition-colors flex items-center gap-2"
+              disabled={isLoading || isSaving}
             >
-              Save Attendance
+              {isSaving ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <CheckCircle className="w-4 h-4" />
+                  Save All Attendance
+                </>
+              )}
             </button>
 
             <button
               onClick={() => navigate(`/teacher`)}
               className="bg-gray-100 text-gray-800 px-4 py-2 rounded-xl hover:bg-gray-200 transition-colors"
+              disabled={isLoading || isSaving}
             >
               Back to course
             </button>
           </div>
 
-          
           <div className="rounded-2xl border border-gray-200 overflow-visible">
             <table className="w-full text-sm">
               <thead className="bg-gray-100">
@@ -272,6 +493,7 @@ const AttendancePage = () => {
                         className={`w-36 px-4 py-2 rounded-full flex justify-between items-center ${getAttendanceColor(
                           student.attendance
                         )}`}
+                        disabled={isLoading || isSaving}
                       >
                         <span className="flex items-center gap-2">
                           {getStatusIcon(student.attendance)}
@@ -287,6 +509,7 @@ const AttendancePage = () => {
                               key={option}
                               className="flex items-center gap-2 w-full text-left px-4 py-2 hover:bg-gray-100"
                               onClick={() => handleAttendanceChange(index, option)}
+                              disabled={isSaving}
                             >
                               {getStatusIcon(option)}
                               {option}
@@ -303,6 +526,7 @@ const AttendancePage = () => {
                         className="w-full px-3 py-2 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         value={student.note}
                         onChange={(e) => handleNoteChange(index, e.target.value)}
+                        disabled={isLoading || isSaving}
                       />
                     </td>
 
@@ -310,6 +534,7 @@ const AttendancePage = () => {
                       <button
                         onClick={() => handleViewTimeline(student.id)}
                         className="bg-blue-100 text-blue-800 px-4 py-2 rounded-xl hover:bg-blue-200 transition-colors flex items-center gap-2"
+                        disabled={isLoading || isSaving}
                       >
                         <Calendar className="w-4 h-4" />
                         View Timeline
@@ -318,7 +543,7 @@ const AttendancePage = () => {
                   </tr>
                 ))}
 
-                {filteredStudents.length === 0 && (
+                {filteredStudents.length === 0 && !isLoading && (
                   <tr>
                     <td colSpan="5" className="text-center py-6 text-gray-500">
                       No students found
@@ -331,11 +556,9 @@ const AttendancePage = () => {
         </div>
       </div>
 
-      
       {isTimelineModalOpen && selectedStudentTimeline && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[80vh] overflow-hidden">
-           
             <div className="bg-gradient-to-r from-blue-600 to-blue-800 p-6 text-white">
               <div className="flex justify-between items-center">
                 <div>
@@ -349,7 +572,6 @@ const AttendancePage = () => {
                   <X className="w-6 h-6" />
                 </button>
               </div>
-              
               
               {selectedStudentTimeline.timeline && (
                 <div className="mt-4 grid grid-cols-4 gap-2">
@@ -381,54 +603,51 @@ const AttendancePage = () => {
               )}
             </div>
 
-            
             <div className="p-6 overflow-y-auto max-h-[50vh]">
               <h3 className="text-lg font-semibold text-gray-800 mb-4">
-                Attendance History
+                Attendance History (Latest First)
               </h3>
               
               {selectedStudentTimeline.timeline && selectedStudentTimeline.timeline.length > 0 ? (
                 <div className="space-y-3">
-                  {[...selectedStudentTimeline.timeline]
-                    .sort((a, b) => new Date(b.date) - new Date(a.date)) // Sort by date descending
-                    .map((entry, index) => (
-                      <div
-                        key={index}
-                        className={`flex items-center justify-between p-4 rounded-xl border ${
-                          entry.date === selectedDate ? "border-blue-300 bg-blue-50" : "border-gray-200"
-                        }`}
-                      >
-                        <div className="flex items-center gap-3">
-                          {getStatusIcon(entry.status)}
-                          <div>
-                            <div className="font-medium text-gray-900">
-                              {formatDate(entry.date)}
-                              {entry.date === selectedDate && (
-                                <span className="ml-2 text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
-                                  Today
-                                </span>
-                              )}
-                            </div>
-                            {entry.notes && (
-                              <div className="text-sm text-gray-600 mt-1">
-                                Note: {entry.notes}
-                              </div>
+                  {selectedStudentTimeline.timeline.map((entry, index) => (
+                    <div
+                      key={index}
+                      className={`flex items-center justify-between p-4 rounded-xl border ${
+                        entry.date === selectedDate ? "border-blue-300 bg-blue-50" : "border-gray-200"
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        {getStatusIcon(entry.status)}
+                        <div>
+                          <div className="font-medium text-gray-900">
+                            {formatDate(entry.date)}
+                            {entry.date === selectedDate && (
+                              <span className="ml-2 text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
+                                Today
+                              </span>
                             )}
                           </div>
-                        </div>
-                        <div className="flex items-center gap-3">
-                          <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                            entry.status === "Present"
-                              ? "bg-green-100 text-green-800"
-                              : entry.status === "Absent"
-                              ? "bg-red-100 text-red-800"
-                              : "bg-yellow-100 text-yellow-800"
-                          }`}>
-                            {entry.status}
-                          </span>
+                          {entry.notes && (
+                            <div className="text-sm text-gray-600 mt-1">
+                              Note: {entry.notes}
+                            </div>
+                          )}
                         </div>
                       </div>
-                    ))}
+                      <div className="flex items-center gap-3">
+                        <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                          entry.status === "Present"
+                            ? "bg-green-100 text-green-800"
+                            : entry.status === "Absent"
+                            ? "bg-red-100 text-red-800"
+                            : "bg-yellow-100 text-yellow-800"
+                        }`}>
+                          {entry.status}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               ) : (
                 <div className="text-center py-8 text-gray-500">
@@ -438,8 +657,12 @@ const AttendancePage = () => {
               )}
             </div>
 
-            
-            <div className="border-t px-6 py-4 bg-gray-50 flex justify-end">
+            <div className="border-t px-6 py-4 bg-gray-50 flex justify-between items-center">
+              <div className="text-sm text-gray-600">
+                Last updated: {selectedStudentTimeline.timeline && selectedStudentTimeline.timeline.length > 0 
+                  ? formatDate(selectedStudentTimeline.timeline[0].date) 
+                  : "Never"}
+              </div>
               <button
                 onClick={closeTimelineModal}
                 className="px-6 py-2 bg-gray-200 text-gray-800 rounded-xl hover:bg-gray-300 transition-colors"
