@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { CircularProgressbar, buildStyles } from "react-circular-progressbar";
 import "react-circular-progressbar/dist/styles.css";
@@ -10,13 +10,16 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [courseColors, setCourseColors] = useState({});
 
-  const gradients = [
-    "from-teal-400 to-teal-200",
-    "from-purple-400 to-pink-300",
-    "from-yellow-400 to-orange-300",
-    "from-blue-400 to-indigo-300",
-    "from-green-400 to-lime-300",
-  ];
+  const gradients = useMemo(
+    () => [
+      "from-teal-400 to-teal-200",
+      "from-purple-400 to-pink-300",
+      "from-yellow-400 to-orange-300",
+      "from-blue-400 to-indigo-300",
+      "from-green-400 to-lime-300",
+    ],
+    []
+  );
 
   useEffect(() => {
     const fetchDashboard = async () => {
@@ -58,7 +61,7 @@ const Dashboard = () => {
     };
 
     fetchDashboard();
-  }, [navigate]);
+  }, [navigate, gradients]);
 
   if (loading) return <div className="text-center mt-20">Loading...</div>;
 
@@ -110,6 +113,7 @@ const Dashboard = () => {
             ))
           )}
         </div>
+
         <div className="bg-white rounded-xl shadow-md p-6 flex flex-col items-center justify-center">
           <h3 className="text-lg font-semibold text-gray-800 mb-1">
             Your Attendance Today
