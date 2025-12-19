@@ -1,10 +1,6 @@
-<<<<<<< HEAD
-=======
 import React, { useState, useEffect } from "react";
->>>>>>> a73984d54dd53bc81d6b6c130c852bdb4c8f472b
 import { useNavigate } from "react-router-dom";
-import { BookOpen, Users, User, PieChart } from "lucide-react";
-import { CircularProgressbar, buildStyles } from "react-circular-progressbar";
+import { BookOpen, Users, User } from "lucide-react";
 import "react-circular-progressbar/dist/styles.css";
 import Header from "../components/Header";
 
@@ -87,14 +83,16 @@ export default function Dashboard() {
             {courses.length === 0 ? (
               <p>No courses assigned.</p>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 w-full">
                 {courses.map((course) => (
                   <div
                     key={course.id}
-                    className="bg-white border rounded-xl shadow p-6 flex flex-col min-h-[260px] max-w-[520px]"
+                    className="bg-white border rounded-xl shadow p-6 flex flex-col min-h-[260px]"
                   >
                     <div
-                      className={`w-full h-36 rounded-lg mb-4 flex items-center justify-center bg-gradient-to-r ${getCourseGradient(course.id)}`}
+                      className={`w-full h-36 rounded-lg mb-4 flex items-center justify-center bg-gradient-to-r ${getCourseGradient(
+                        course.id
+                      )}`}
                     >
                       <BookOpen size={40} className="text-white" />
                     </div>
@@ -115,35 +113,6 @@ export default function Dashboard() {
             )}
           </section>
         </main>
-
-        <aside className="w-80 bg-white shadow rounded-xl p-6 flex flex-col items-center gap-6">
-          <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-            <PieChart size={20} className="text-purple-600" />
-            Today's Attendance Overview
-          </h3>
-
-          <div className="w-40 mb-6">
-            <CircularProgressbar
-              value={95}
-              text={"95%"}
-              strokeWidth={8}
-              styles={buildStyles({
-                pathColor: "#9333EA",
-                textColor: "#9333EA",
-                trailColor: "#E5E7EB",
-                textSize: "18px",
-              })}
-            />
-            <div className="text-center mt-2 text-sm font-medium text-gray-700">
-              Present
-            </div>
-          </div>
-
-          <div className="w-full text-gray-700 text-sm space-y-1 text-center">
-            <p>57 Students Present</p>
-            <p>3 Students Absent</p>
-          </div>
-        </aside>
       </div>
     </div>
   );

@@ -119,7 +119,7 @@ class AttendanceStatsView(APIView):
 
             data.append({
                 "id": student.id,
-                "name": student.user.get_full_name() if hasattr(student, "user") else "",
+                "name": student.full_name,
                 "username": student.user.username if hasattr(student, "user") else "",
                 "fullId": student.fullId,
                 "total_lectures": total_lectures,

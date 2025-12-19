@@ -5,7 +5,6 @@ import Home from "./pages/Home";
 import Login from "./pages/Login";
 
 import TeacherDashboard from "./Teacher/Dashboard";
-import BiologyPage from "./Teacher/BiologyPage";
 import AttendancePage from "./Teacher/AttendancePage";
 
 import StudentDashboard from "./student/dashboard";
@@ -56,14 +55,7 @@ function App() {
             </PrivateRoute>
           }
         />
-        <Route
-          path="/teacher/courses/:id"
-          element={
-            <PrivateRoute role="TCR">
-              <BiologyPage />
-            </PrivateRoute>
-          }
-        />
+        
         <Route
           path="/teacher/courses/:id/attendance"
           element={
