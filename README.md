@@ -46,7 +46,8 @@ attendance_project/
 └── README.md
 
 ## Diagrams
-- [Use Case Diagram]<img width="1668" height="1061" alt="image" src="https://github.com/user-attachments/assets/1b8760c2-a6ff-47f4-9f61-941fdf224c93" />
+- [Use Case Diagram]<img width="939" height="689" alt="Use_Case" src="https://github.com/user-attachments/assets/144d5c88-7c21-4ed8-8e82-feac3eb833b8" />
+
 
 - [Class Diagram]<img width="2098" height="1345" alt="UML class" src="https://github.com/user-attachments/assets/da5e86ea-ccdf-4436-a4f3-7ad2bcc356e6" />
 
