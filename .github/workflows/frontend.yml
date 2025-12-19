@@ -2,9 +2,9 @@ name: Frontend CI
 
 on:
   push:
-    branches: [main, Authentication]
+    branches: [main, student_dashboard]
   pull_request:
-    branches: [main, Authentication]
+    branches: [main, student_dashboard]
 
 jobs:
   frontend:
