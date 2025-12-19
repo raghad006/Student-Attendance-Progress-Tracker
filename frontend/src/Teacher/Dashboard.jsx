@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate , useParams} from "react-router-dom";
 import { BookOpen, Users, User } from "lucide-react";
 import "react-circular-progressbar/dist/styles.css";
 import Header from "../components/Header";
@@ -8,6 +8,7 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
+  const { id: courseId } = useParams();
 
   const getCourseGradient = (courseId) => {
     const gradients = [
@@ -52,9 +53,9 @@ export default function Dashboard() {
     fetchCourses();
   }, [navigate]);
 
-  const handleCourseClick = (course) => {
-    navigate(`/teacher/courses/${course.id}`, { state: { course } });
-  };
+ const handleCourseClick = (course) => {
+  navigate(`/teacher/courses/${course.id}/attendance`);
+};
 
   if (loading) return <div className="text-center mt-20">Loading...</div>;
 

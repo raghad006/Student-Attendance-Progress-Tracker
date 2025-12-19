@@ -196,7 +196,7 @@ const AttendancePage = () => {
       <Header userType="teacher" />
       <div className="p-10 w-full max-w-7xl mx-auto bg-gray-50 min-h-screen mt-24">
         <div className="bg-white rounded-3xl shadow-lg p-8 overflow-visible relative">
-          {/* Header */}
+          
           <div className="flex justify-between items-center mb-8 flex-wrap gap-4">
             <h1 className="text-3xl font-extrabold text-gray-800">Attendance</h1>
 
@@ -220,7 +220,7 @@ const AttendancePage = () => {
             </div>
           </div>
 
-          {/* Buttons */}
+          
           <div className="flex justify-end gap-4 mb-6">
             <button
               onClick={handleMarkAllPresent}
@@ -237,14 +237,14 @@ const AttendancePage = () => {
             </button>
 
             <button
-              onClick={() => navigate(`/teacher/courses/${courseId}`)}
+              onClick={() => navigate(`/teacher`)}
               className="bg-gray-100 text-gray-800 px-4 py-2 rounded-xl hover:bg-gray-200 transition-colors"
             >
               Back to course
             </button>
           </div>
 
-          {/* Table */}
+          
           <div className="rounded-2xl border border-gray-200 overflow-visible">
             <table className="w-full text-sm">
               <thead className="bg-gray-100">
@@ -331,11 +331,11 @@ const AttendancePage = () => {
         </div>
       </div>
 
-      {/* Timeline Modal */}
+      
       {isTimelineModalOpen && selectedStudentTimeline && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[80vh] overflow-hidden">
-            {/* Modal Header */}
+           
             <div className="bg-gradient-to-r from-blue-600 to-blue-800 p-6 text-white">
               <div className="flex justify-between items-center">
                 <div>
@@ -350,7 +350,7 @@ const AttendancePage = () => {
                 </button>
               </div>
               
-              {/* Stats Summary */}
+              
               {selectedStudentTimeline.timeline && (
                 <div className="mt-4 grid grid-cols-4 gap-2">
                   <div className="bg-blue-500 bg-opacity-30 p-3 rounded-lg">
@@ -381,7 +381,7 @@ const AttendancePage = () => {
               )}
             </div>
 
-            {/* Timeline Content */}
+            
             <div className="p-6 overflow-y-auto max-h-[50vh]">
               <h3 className="text-lg font-semibold text-gray-800 mb-4">
                 Attendance History
@@ -438,7 +438,7 @@ const AttendancePage = () => {
               )}
             </div>
 
-            {/* Modal Footer */}
+            
             <div className="border-t px-6 py-4 bg-gray-50 flex justify-end">
               <button
                 onClick={closeTimelineModal}
