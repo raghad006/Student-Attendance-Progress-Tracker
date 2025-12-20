@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { CircularProgressbar, buildStyles } from "react-circular-progressbar";
 import "react-circular-progressbar/dist/styles.css";
@@ -8,17 +8,18 @@ const Dashboard = () => {
   const [courses, setCourses] = useState([]);
   const [today, setToday] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [courseColors, setCourseColors] = useState({});
 
-  const getRandomGradient = () => {
-    const gradients = [
+  const gradients = useMemo(
+    () => [
       "from-teal-400 to-teal-200",
       "from-purple-400 to-pink-300",
       "from-yellow-400 to-orange-300",
       "from-blue-400 to-indigo-300",
       "from-green-400 to-lime-300",
-    ];
-    return gradients[Math.floor(Math.random() * gradients.length)];
-  };
+    ],
+    []
+  );
 
   useEffect(() => {
     const fetchDashboard = async () => {
@@ -46,6 +47,12 @@ const Dashboard = () => {
           total: data.today?.total || 0,
           classes: data.today?.classes || [],
         });
+
+        const colors = {};
+        (data.courses || []).forEach((course, index) => {
+          colors[course.id] = gradients[index % gradients.length];
+        });
+        setCourseColors(colors);
       } catch (err) {
         console.error(err);
       } finally {
@@ -54,7 +61,7 @@ const Dashboard = () => {
     };
 
     fetchDashboard();
-  }, [navigate]);
+  }, [navigate, gradients]);
 
   if (loading) return <div className="text-center mt-20">Loading...</div>;
 
@@ -81,7 +88,7 @@ const Dashboard = () => {
                 className="bg-white rounded-2xl shadow-lg p-4 flex flex-col gap-3 border border-gray-100"
               >
                 <div
-                  className={`h-48 rounded-xl bg-gradient-to-r ${getRandomGradient()}`}
+                  className={`h-48 rounded-xl bg-gradient-to-r ${courseColors[course.id]}`}
                 />
                 <div className="font-semibold text-gray-800">
                   {course.title}
@@ -106,6 +113,7 @@ const Dashboard = () => {
             ))
           )}
         </div>
+
         <div className="bg-white rounded-xl shadow-md p-6 flex flex-col items-center justify-center">
           <h3 className="text-lg font-semibold text-gray-800 mb-1">
             Your Attendance Today

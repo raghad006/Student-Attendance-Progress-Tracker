@@ -1,16 +1,17 @@
-from datetime import date, timedelta
+from datetime import date
+from django.shortcuts import get_object_or_404
+
 from rest_framework import viewsets, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from django.shortcuts import get_object_or_404
 
 from students.models import StudentData, Course
 from .models import AttendanceRecord
 from .serializers import AttendanceRecordSerializer
 
-class TakeAttendanceViewSet(viewsets.ModelViewSet):
 
+class TakeAttendanceViewSet(viewsets.ModelViewSet):
     serializer_class = AttendanceRecordSerializer
     permission_classes = [IsAuthenticated]
 
@@ -23,31 +24,42 @@ class TakeAttendanceViewSet(viewsets.ModelViewSet):
     def create(self, request, *args, **kwargs):
         user = request.user
         if user.role != "TCR":
-            return Response({"detail": "Not authorized"}, status=status.HTTP_403_FORBIDDEN)
+            return Response(
+                {"detail": "Not authorized"},
+                status=status.HTTP_403_FORBIDDEN
+            )
 
         course_id = request.data.get("course_id")
         records = request.data.get("records", [])
         course = get_object_or_404(Course, id=course_id, teacher=user)
+
         created_records = []
 
         for record in records:
             student_id = record.get("student_id")
             status_value = record.get("status", "P")
             notes_value = record.get("notes", "")
-            record_date = record.get("date")  # optional, default = today
+            record_date = record.get("date")
             record_date = date.fromisoformat(record_date) if record_date else date.today()
 
             try:
-                student = StudentData.objects.get(id=student_id, courses=course)
+                student = StudentData.objects.get(
+                    id=student_id,
+                    courses=course
+                )
             except StudentData.DoesNotExist:
                 continue
 
-            attendance, created = AttendanceRecord.objects.update_or_create(
+            attendance, _ = AttendanceRecord.objects.update_or_create(
                 student=student,
                 course=course,
                 date=record_date,
-                defaults={"status": status_value, "notes": notes_value}
+                defaults={
+                    "status": status_value,
+                    "notes": notes_value
+                }
             )
+
             created_records.append(attendance)
 
         serializer = AttendanceRecordSerializer(created_records, many=True)
@@ -55,68 +67,63 @@ class TakeAttendanceViewSet(viewsets.ModelViewSet):
 
 
 class AttendanceStatsView(APIView):
-
     permission_classes = [IsAuthenticated]
 
     def get(self, request, course_id):
         user = request.user
         if user.role != "TCR":
-            return Response({"detail": "Not authorized"}, status=status.HTTP_403_FORBIDDEN)
+            return Response(
+                {"detail": "Not authorized"},
+                status=status.HTTP_403_FORBIDDEN
+            )
 
         course = get_object_or_404(Course, id=course_id, teacher=user)
-        students = StudentData.objects.filter(courses=course)
+        students = course.students.all()
         data = []
 
-        today = date.today()
-        end_date = today + timedelta(days=30)
-        timeline_dates = [today + timedelta(days=i) for i in range((end_date - today).days + 1)]
+        for student in students:
+            records = AttendanceRecord.objects.filter(
+                course=course,
+                student=student
+            ).order_by("date")
 
-        for stu in students:
-            records = AttendanceRecord.objects.filter(course=course, student=stu)
-            records_by_date = {r.date: r for r in records}
-
+            total_lectures = records.count()
+            total_score = 0.0
             timeline = []
-            total_lectures = 0
-            total_present_score = 0.0
 
-            for d in timeline_dates:
-                if d in records_by_date:
-                    r = records_by_date[d]
-                    if r.status == "P":
-                        score = 1.0
-                        status_text = "Present"
-                    elif r.status == "L":
-                        score = 0.7
-                        status_text = "Late"
-                    else:
-                        score = 0.0
-                        status_text = "Absent"
-
-                    total_lectures += 1
-                    total_present_score += score
-
-                    timeline.append({
-                        "date": d,
-                        "status": status_text,
-                        "notes": r.notes
-                    })
+            for record in records:
+                if record.status == "P":
+                    score = 1.0
+                    status_text = "Present"
+                elif record.status == "L":
+                    score = 0.7
+                    status_text = "Late"
                 else:
-                    timeline.append({
-                        "date": d,
-                        "status": "--",
-                        "notes": ""
-                    })
+                    score = 0.0
+                    status_text = "Absent"
 
-            attendance_percentage = (total_present_score / total_lectures * 100) if total_lectures > 0 else 0
-            grade_out_of_5 = round((attendance_percentage / 100) * 5, 2)
+                total_score += score
+
+                timeline.append({
+                    "date": record.date,
+                    "status": status_text,
+                    "notes": record.notes
+                })
+
+            attendance_rate = (
+                round((total_score / total_lectures) * 100, 2)
+                if total_lectures > 0 else 0
+            )
+
+            grade_out_of_5 = round((attendance_rate / 100) * 5, 2)
 
             data.append({
-                "id": stu.id,
-                "name": stu.full_name,
-                "username": stu.user.username if hasattr(stu, "user") else "",
-                "fullId": stu.fullId,
+                "id": student.id,
+                "name": student.full_name,
+                "username": student.user.username if hasattr(student, "user") else "",
+                "fullId": student.fullId,
                 "total_lectures": total_lectures,
-                "attendance_percentage": round(attendance_percentage, 2),
+                "attendance_rate": attendance_rate,
                 "grade_out_of_5": grade_out_of_5,
                 "timeline": timeline
             })

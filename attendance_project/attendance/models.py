@@ -5,7 +5,7 @@ class AttendanceRecord(models.Model):
     student = models.ForeignKey(StudentData, on_delete=models.CASCADE, related_name="attendance_records")
     course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name="attendance_records")
     
-    date = models.DateField()  # Remove auto_now_add, we want to set specific dates
+    date = models.DateField(auto_now_add=True)
     time = models.TimeField(auto_now_add=True)
 
     STATUS_CHOICES = [
