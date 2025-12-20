@@ -149,5 +149,153 @@ Web Application
 - Development tools must comply with university guidelines.  
 - Team size is limited (solo or small team).  
 - Internet connection is required to access the system.
-  ## Sprint 1
-- Just Test
+
+# Scrum Sprint Reports
+
+**Project Start Date:** 18-10-2025  
+**Project End Date:** 20-12-2025  
+
+## Sprint 1 (Weeks 1–2)
+**18-10-2025 – 31-10-2025**  
+**Focus:** Authentication & CI Setup  
+
+### Sprint Goal
+Deliver a secure authentication system and establish continuous integration workflows.
+
+### Sprint Summary
+**Haneen**
+- Worked on frontend authentication pages.
+- Assisted in resolving merge conflicts.
+- Reviewed authentication UI.
+
+**Sara**
+- Helped design login/register UI.
+- Fixed routing and navigation issues.
+
+**Raghad**
+- Set up CI workflows for Authentication, Frontend, and Student Dashboard.
+- Implemented backend authentication logic.
+- Fixed YAML configuration errors.
+
+**Malak**
+- Tested authentication flow.
+- Reported validation and edge-case issues.
+
+**Blockers**
+- Initial CI failures and merge conflicts (resolved).
+
+## Sprint 2 (Weeks 3–4)
+**01-11-2025 – 14-11-2025**  
+**Focus:** Student Dashboard Development  
+
+### Sprint Goal
+Develop and integrate the student dashboard with stable UI and CI support.
+
+### Sprint Summary
+**Haneen**
+- Reviewed dashboard UI.
+- Fixed integration issues after merges.
+- Updated README sections related to dashboard.
+
+**Sara**
+- Implemented dashboard UI components.
+- Activated “View Course” button.
+- Removed non-working UI buttons.
+
+**Raghad**
+- Created Student Dashboard CI workflow.
+- Fixed CI and branch conflicts.
+- Handled dashboard feature merges.
+
+**Malak**
+- Tested dashboard navigation.
+- Verified UI behavior and reported bugs.
+
+**Blockers**
+- UI styling issues and merge conflicts (resolved).
+
+## Sprint 3 (Weeks 5–6)
+**15-11-2025 – 28-11-2025**  
+**Focus:** Database Migration & Backend Integration  
+
+### Sprint Goal
+Migrate the database to MySQL and ensure smooth backend integration.
+
+### Sprint Summary
+**Haneen**
+- Updated documentation to reflect MySQL migration.
+- Reviewed backend integration changes.
+
+**Sara**
+- Assisted in frontend adjustments after database changes.
+- Tested frontend–backend connectivity.
+
+**Raghad**
+- Migrated database from SQLite to MySQL.
+- Updated CI workflows to support MySQL.
+- Fixed MySQL service issues in GitHub Actions.
+
+**Malak**
+- Tested database operations.
+- Verified data persistence and API responses.
+
+**Blockers**
+- MySQL service readiness in CI (resolved).
+
+## Sprint 4 (Weeks 7–8)
+**29-11-2025 – 12-12-2025**  
+**Focus:** Attendance System & Dashboard Enhancements  
+
+### Sprint Goal
+Implement the attendance system and enhance dashboard functionality.
+
+### Sprint Summary
+**Haneen**
+- Reviewed attendance feature integration.
+- Helped resolve dashboard UI issues.
+
+**Sara**
+- Implemented attendance UI.
+- Updated dashboard timeline.
+- Removed unnecessary “Save All Attendance” button.
+
+**Raghad**
+- Developed attendance backend using Django.
+- Fixed grade recording errors.
+- Integrated attendance APIs.
+
+**Malak**
+- Performed functional testing on attendance features.
+- Validated data accuracy.
+
+**Blockers**
+- UI logic issues during attendance saving (resolved).
+
+## Sprint 5 (Weeks 9–10)
+**13-12-2025 – 20-12-2025**  
+**Focus:** Documentation, Diagrams & Final CI Improvements  
+
+### Sprint Goal
+Finalize documentation and ensure CI stability.
+
+### Sprint Summary
+**Haneen**
+- Created and updated system diagrams (Use Case, Sequence).
+- Updated README and requirement documents.
+- Fixed diagram links.
+
+**Sara**
+- Final UI refinements.
+- Assisted in usability testing.
+
+**Raghad**
+- Improved CI workflows and branch filtering.
+- Fixed remaining YAML issues.
+- Ensured stable builds.
+
+**Malak**
+- Conducted final testing.
+- Verified requirements coverage.
+
+**Blockers**
+- None 
