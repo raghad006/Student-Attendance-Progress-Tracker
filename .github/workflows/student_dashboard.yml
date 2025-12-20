@@ -1,93 +1,62 @@
 name: Student Dashboard CI
-
 on:
   push:
-    branches: [main, student_dashboard]
+    branches: [ main, student_dashboard ]
   pull_request:
-    branches: [main, student_dashboard]
+    branches: [ main, student_dashboard ]
 
 jobs:
   backend:
     runs-on: ubuntu-latest
+
     services:
       mysql:
         image: mysql:8.0
-        env:
-          MYSQL_ROOT_PASSWORD: rootpassword
-          MYSQL_DATABASE: attendance_db
-          MYSQL_USER: test_user
-          MYSQL_PASSWORD: test_password
         ports:
           - 3306:3306
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: attendance_db
+          MYSQL_USER: attendance_user
+          MYSQL_PASSWORD: attendance_pass
         options: >-
-          --health-cmd="mysqladmin ping -h 127.0.0.1 -u root -prootpassword"
+          --health-cmd="mysqladmin ping --silent"
           --health-interval=10s
           --health-timeout=5s
           --health-retries=5
-
       redis:
         image: redis:7
         ports:
           - 6379:6379
-        options: >-
-          --health-cmd="redis-cli ping"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=5
 
     env:
       DEBUG: 1
       SECRET_KEY: django-insecure-test-key-for-ci
       DB_NAME: attendance_db
-      DB_USER: test_user
-      DB_PASSWORD: test_password
+      DB_USER: attendance_user
+      DB_PASSWORD: attendance_pass
       DB_HOST: 127.0.0.1
       DB_PORT: 3306
-      REDIS_URL: redis://127.0.0.1:6379
 
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-      - uses: actions/setup-python@v4
+      - name: Set up Python
+        uses: actions/setup-python@v4
         with:
-          python-version: 3.12
+          python-version: "3.12"
 
       - name: Install dependencies
         run: |
-          sudo apt-get update
-          sudo apt-get install -y default-mysql-client
           cd attendance_project
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-
-      - name: Wait for MySQL and Redis
-        run: |
-          echo "Waiting for MySQL..."
-          until mysqladmin ping -h 127.0.0.1 -u root -prootpassword --silent; do
-            sleep 2
-          done
-          echo "MySQL is up"
-          echo "Waiting for Redis..."
-          until redis-cli ping | grep PONG; do
-            sleep 2
-          done
-          echo "Redis is up"
-
-      - name: Setup MySQL permissions
-        run: |
-          mysql -h 127.0.0.1 -u root -prootpassword -e "
-          DROP USER IF EXISTS 'test_user'@'%';
-          CREATE USER 'test_user'@'%' IDENTIFIED BY 'test_password';
-          GRANT ALL PRIVILEGES ON *.* TO 'test_user'@'%';
-          FLUSH PRIVILEGES;
-          "
-
       - name: Run migrations
         run: |
           cd attendance_project
           python manage.py migrate
-
       - name: Run tests
         run: |
           cd attendance_project
-          python manage.py test students --keepdb
+          python manage.py test accounts students
