@@ -5,7 +5,6 @@ import Home from "./pages/Home";
 import Login from "./pages/Login";
 
 import TeacherDashboard from "./Teacher/Dashboard";
-import BiologyPage from "./Teacher/BiologyPage";
 import AttendancePage from "./Teacher/AttendancePage";
 import NotificationPage from "./components/Notification";
 
@@ -51,20 +50,11 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
 
-        {/* Teacher Routes */}
         <Route
           path="/teacher"
           element={
             <PrivateRoute role="TCR">
               <TeacherDashboard />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/teacher/courses/:id"
-          element={
-            <PrivateRoute role="TCR">
-              <BiologyPage />
             </PrivateRoute>
           }
         />

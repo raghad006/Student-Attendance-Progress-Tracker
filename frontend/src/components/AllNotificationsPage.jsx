@@ -445,7 +445,6 @@ export default function AllNotificationsPage() {
                   const courseDisplay = getCourseDisplay(notification);
                   const displayTitle = getDisplayTitle(notification);
                   const isSystem = getSenderDisplay(notification) === "System";
-                  const hasCourse = hasCourseInfo(notification);
                   const recipientInfo = getRecipientDisplay(notification);
                   
                   return (

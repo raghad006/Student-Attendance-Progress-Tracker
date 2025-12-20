@@ -52,9 +52,9 @@ export default function Dashboard() {
     fetchCourses();
   }, [navigate]);
 
-  const handleCourseClick = (course) => {
-    navigate(`/teacher/courses/${course.id}`, { state: { course } });
-  };
+ const handleCourseClick = (course) => {
+  navigate(`/teacher/courses/${course.id}/attendance`);
+};
 
   if (loading) return <div className="text-center mt-20">Loading...</div>;
 
