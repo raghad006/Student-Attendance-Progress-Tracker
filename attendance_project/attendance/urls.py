@@ -2,6 +2,7 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from .views import TakeAttendanceViewSet, AttendanceStatsView
 
+
 router = DefaultRouter()
 router.register(r"take", TakeAttendanceViewSet, basename="take_attendance")
 
