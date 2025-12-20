@@ -162,6 +162,87 @@ Web Application
 - Team size is limited (solo or small team).  
 - Internet connection is required to access the system.
 
+## Scrum Meeting Summaries
+
+### Sprint 1 (Weeks 1–2) – Authentication & CI Setup
+
+**Daily Scrum Summary**
+- Discussed progress on authentication implementation.
+- Reviewed CI pipeline setup and initial failures.
+- Identified merge conflicts and assigned fixes.
+
+**Sprint Review Summary**
+- Authentication flow and JWT implementation were reviewed.
+- CI workflows for backend and frontend were demonstrated.
+
+**Sprint Retrospective Summary**
+- CI configuration took longer than expected.
+- Team agreed to improve branch coordination.
+
+
+### Sprint 2 (Weeks 3–4) – Student Dashboard Development
+
+**Daily Scrum Summary**
+- Reviewed student dashboard UI development progress.
+- Discussed integration issues between frontend and backend.
+- Identified UI styling blockers.
+
+**Sprint Review Summary**
+- Student dashboard features were reviewed.
+- Navigation and course view functionality were approved.
+
+**Sprint Retrospective Summary**
+- Merge conflicts affected development speed.
+- Better communication during merges was suggested.
+
+
+### Sprint 3 (Weeks 5–6) – Database Migration & Backend Integration
+
+**Daily Scrum Summary**
+- Discussed database migration progress from SQLite to MySQL.
+- Reviewed backend integration tasks.
+- Identified MySQL service issues in CI.
+
+**Sprint Review Summary**
+- Successful migration to MySQL was demonstrated.
+- Backend APIs were verified with the new database.
+
+**Sprint Retrospective Summary**
+- CI database setup was challenging.
+- Early testing of CI services was recommended.
+
+
+### Sprint 4 (Weeks 7–8) – Attendance System & Dashboard Enhancements
+
+**Daily Scrum Summary**
+- Discussed attendance feature implementation.
+- Reviewed dashboard enhancements and UI issues.
+- Identified logic issues during attendance saving.
+
+**Sprint Review Summary**
+- Attendance marking functionality was demonstrated.
+- Dashboard enhancements were reviewed and approved.
+
+**Sprint Retrospective Summary**
+- Attendance logic required extra testing.
+- Team agreed to increase testing before merges.
+
+
+### Sprint 5 (Weeks 9–10) – Documentation & Final CI Improvements
+
+**Daily Scrum Summary**
+- Reviewed documentation progress and remaining tasks.
+- Discussed final CI workflow improvements.
+- Confirmed testing status.
+
+**Sprint Review Summary**
+- Final documentation and diagrams were reviewed.
+- CI pipelines were verified to be stable.
+
+**Sprint Retrospective Summary**
+- Project goals were successfully achieved.
+- Team collaboration and planning were effective.
+
 # Scrum Sprint Reports
 
 **Project Start Date:** 18-10-2025  
