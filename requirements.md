@@ -273,6 +273,7 @@ Deliver a secure authentication system and establish continuous integration work
 **Malak**
 - Tested authentication flow.
 - Reported validation and edge-case issues.
+- Assisted in frontend enhancements (layout adjustments, button alignment).
 
 **Blockers**
 - Initial CI failures and merge conflicts (resolved).
@@ -303,6 +304,8 @@ Develop and integrate the student dashboard with stable UI and CI support.
 **Malak**
 - Tested dashboard navigation.
 - Verified UI behavior and reported bugs.
+- Implemented frontend improvements (responsive adjustments, styling fixes).
+
 
 **Blockers**
 - UI styling issues and merge conflicts (resolved).
@@ -331,6 +334,8 @@ Migrate the database to MySQL and ensure smooth backend integration.
 **Malak**
 - Tested database operations.
 - Verified data persistence and API responses.
+- Assisted in minor UI fixes to match backend updates.
+
 
 **Blockers**
 - MySQL service readiness in CI (resolved).
@@ -360,6 +365,8 @@ Implement the attendance system and enhance dashboard functionality.
 **Malak**
 - Performed functional testing on attendance features.
 - Validated data accuracy.
+- Assisted with frontend enhancements (attendance table layout, button feedback, responsive display).
+
 
 **Blockers**
 - UI logic issues during attendance saving (resolved).
@@ -389,6 +396,7 @@ Finalize documentation and ensure CI stability.
 **Malak**
 - Conducted final testing.
 - Verified requirements coverage.
+- Assisted in final frontend polish (styling consistency, UI alignment, responsiveness fixes).
 
 **Blockers**
 - None 
