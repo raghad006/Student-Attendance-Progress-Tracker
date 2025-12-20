@@ -112,6 +112,16 @@ Web Application
 - The system shall allow teachers to add notes for each student.  
 - The system shall support bulk actions such as "Mark All Present".  
 
+### Notifications & Messaging System
+- The system shall allow teachers to send notifications to all students enrolled in a specific course.
+- The system shall automatically send a welcome notification to students upon successful enrollment in a new course.
+- The system shall display notifications on the student dashboard.
+- The system shall store notifications for future reference.
+- The system shall allow students to mark individual notifications as read.
+- The system shall allow students to mark all notifications as read.
+- The system shall visually distinguish between read and unread notifications.
+- The system shall display the number of unread notifications.
+
 ### Admin Features
 - The system shall provide an admin dashboard for managing users.  
 - The system shall allow role assignment (Student, Teacher, Admin).  
@@ -123,12 +133,14 @@ Web Application
 
 ### Performance
 - The system shall respond to user actions within 2 seconds.  
-- The system shall support concurrent users without performance degradation.  
+- The system shall support concurrent users without performance degradation.
+- The notification system shall deliver notifications within an acceptable response time.
 
 ### Security
 - Passwords shall be stored using secure hashing.  
 - JWT tokens shall be used for API authentication.  
-- Unauthorized users shall not access protected endpoints.  
+- Unauthorized users shall not access protected endpoints.
+- Notifications shall be accessible only to authorized users.
 
 ### Usability
 - The system shall have a clean and intuitive user interface.  
