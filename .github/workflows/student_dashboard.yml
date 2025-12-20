@@ -24,7 +24,17 @@ jobs:
           --health-interval=10s
           --health-timeout=5s
           --health-retries=5
-    
+
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd="redis-cli ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
     env:
       DEBUG: 1
       SECRET_KEY: django-insecure-test-key-for-ci
@@ -33,14 +43,15 @@ jobs:
       DB_PASSWORD: test_password
       DB_HOST: 127.0.0.1
       DB_PORT: 3306
-    
+      REDIS_URL: redis://127.0.0.1:6379
+
     steps:
       - uses: actions/checkout@v3
-      
+
       - uses: actions/setup-python@v4
         with:
           python-version: 3.12
-      
+
       - name: Install dependencies
         run: |
           sudo apt-get update
@@ -48,11 +59,20 @@ jobs:
           cd attendance_project
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-      
-      - name: Wait for MySQL
+
+      - name: Wait for MySQL and Redis
         run: |
-          sleep 10
-      
+          echo "Waiting for MySQL..."
+          until mysqladmin ping -h 127.0.0.1 -u root -prootpassword --silent; do
+            sleep 2
+          done
+          echo "MySQL is up"
+          echo "Waiting for Redis..."
+          until redis-cli ping | grep PONG; do
+            sleep 2
+          done
+          echo "Redis is up"
+
       - name: Setup MySQL permissions
         run: |
           mysql -h 127.0.0.1 -u root -prootpassword -e "
@@ -61,12 +81,12 @@ jobs:
           GRANT ALL PRIVILEGES ON *.* TO 'test_user'@'%';
           FLUSH PRIVILEGES;
           "
-      
+
       - name: Run migrations
         run: |
           cd attendance_project
           python manage.py migrate
-      
+
       - name: Run tests
         run: |
           cd attendance_project
