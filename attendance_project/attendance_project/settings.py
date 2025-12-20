@@ -32,6 +32,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'channels',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -44,6 +45,7 @@ INSTALLED_APPS = [
     "accounts",
     'students',
     'attendance', 
+    "notifications", 
 ]
 
 MIDDLEWARE = [
@@ -61,7 +63,6 @@ MIDDLEWARE = [
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
 ]
-CORS_ALLOW_ALL_ORIGINS = True #dev onlyyyy
 
 ROOT_URLCONF = 'attendance_project.urls'
 AUTH_USER_MODEL = "accounts.User"
@@ -81,7 +82,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'attendance_project.wsgi.application'
-
+ASGI_APPLICATION = "attendance_project.asgi.application"
 
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
@@ -165,3 +166,15 @@ if 'test' in sys.argv or 'test_coverage' in sys.argv:
             'NAME': BASE_DIR / 'db_test.sqlite3',
         }
     }
+
+
+
+
+
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {"hosts": [("127.0.0.1", 6379)]},
+    }
+}
+

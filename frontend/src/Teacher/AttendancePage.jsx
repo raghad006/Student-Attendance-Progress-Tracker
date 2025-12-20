@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import axios from "axios";
 import { useParams, useNavigate } from "react-router-dom";
-import { ChevronDown, X, Calendar, CheckCircle, XCircle, Clock } from "lucide-react";
+import { ChevronDown, X, Calendar, CheckCircle, XCircle, Clock ,Bell} from "lucide-react";
 import Header from "../components/Header";
 
 const AttendancePage = () => {
@@ -139,6 +139,9 @@ const AttendancePage = () => {
       return false;
     }
   };
+  const handleNotify = () => {
+  navigate(`/teacher/courses/${courseId}/notify`);
+};
 
   const handleAttendanceChange = async (index, value) => {
     const updated = [...students];
@@ -383,24 +386,32 @@ const AttendancePage = () => {
             </div>
           )}
 
-          <div className="flex justify-end gap-4 mb-6">
-            <button
-              onClick={handleMarkAllPresent}
-              className="bg-green-100 text-green-800 px-4 py-2 rounded-xl hover:bg-green-200 transition-colors flex items-center gap-2"
-              disabled={isLoading || isSaving}
-            >
-              <CheckCircle className="w-4 h-4" />
-              Mark All Present
-            </button>
+<div className="flex justify-end gap-4 mb-6">
+  <button
+    onClick={handleNotify}
+    className="bg-teal-600 text-white px-4 py-2 rounded-xl hover:bg-teal-700 transition-colors flex items-center gap-2"
+  >
+    <Bell className="w-4 h-4" />
+    Notify
+  </button>
 
-            <button
-              onClick={() => navigate(`/teacher`)}
-              className="bg-gray-100 text-gray-800 px-4 py-2 rounded-xl hover:bg-gray-200 transition-colors"
-              disabled={isLoading || isSaving}
-            >
-              Back to course
-            </button>
-          </div>
+  <button
+    onClick={handleMarkAllPresent}
+    className="bg-green-100 text-green-800 px-4 py-2 rounded-xl hover:bg-green-200 transition-colors flex items-center gap-2"
+    disabled={isLoading || isSaving}
+  >
+    <CheckCircle className="w-4 h-4" />
+    Mark All Present
+  </button>
+
+  <button
+    onClick={() => navigate(`/teacher`)}
+    className="bg-gray-100 text-gray-800 px-4 py-2 rounded-xl hover:bg-gray-200 transition-colors"
+    disabled={isLoading || isSaving}
+  >
+    Back to course
+  </button>
+</div>
 
           <div className="rounded-2xl border border-gray-200 overflow-visible">
             <table className="w-full text-sm">

@@ -6,10 +6,13 @@ import Login from "./pages/Login";
 
 import TeacherDashboard from "./Teacher/Dashboard";
 import AttendancePage from "./Teacher/AttendancePage";
+import NotificationPage from "./components/Notification";
 
 import StudentDashboard from "./student/dashboard";
 import Course from "./student/courses";
+
 import Header from "./components/Header";
+import AllNotificationsPage from "./components/AllNotificationsPage";
 
 const PrivateRoute = ({ children, role }) => {
   const [loading, setLoading] = useState(true);
@@ -55,12 +58,19 @@ function App() {
             </PrivateRoute>
           }
         />
-        
         <Route
           path="/teacher/courses/:id/attendance"
           element={
             <PrivateRoute role="TCR">
               <AttendancePage />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/teacher/courses/:id/notify"
+          element={
+            <PrivateRoute role="TCR">
+              <NotificationPage />
             </PrivateRoute>
           }
         />
@@ -81,6 +91,15 @@ function App() {
             </PrivateRoute>
           }
         />
+        <Route
+          path="/notifications"
+          element={
+            <PrivateRoute>
+              <AllNotificationsPage />
+            </PrivateRoute>
+          }
+        />
+
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>

@@ -1,9 +1,10 @@
-name: Student Dashboard CI
+name: Notification CI
+
 on:
   push:
-    branches: [ main, student_dashboard ]
+    branches: [ main, pattern ]
   pull_request:
-    branches: [ main, student_dashboard ]
+    branches: [ main, pattern ]
 
 jobs:
   backend:
@@ -24,6 +25,7 @@ jobs:
           --health-interval=10s
           --health-timeout=5s
           --health-retries=5
+
       redis:
         image: redis:7
         ports:
@@ -52,11 +54,13 @@ jobs:
           cd attendance_project
           python -m pip install --upgrade pip
           pip install -r requirements.txt
+
       - name: Run migrations
         run: |
           cd attendance_project
           python manage.py migrate
+
       - name: Run tests
         run: |
           cd attendance_project
-          python manage.py test accounts students
+          python manage.py test accounts notifications

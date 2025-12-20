@@ -8,4 +8,6 @@ urlpatterns = [
     path("test/", test_view, name="test"),
     path("api/students/", include("students.urls")),
     path("api/attendance/", include("attendance.urls")),
+    path("api/notifications/", include("notifications.urls")),
+
 ]
