@@ -1,12 +1,11 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { BookOpen } from "lucide-react"; // Icon
+import { BookOpen } from "lucide-react"; 
 import "react-circular-progressbar/dist/styles.css";
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const [courses, setCourses] = useState([]);
-  const [today, setToday] = useState(null);
   const [loading, setLoading] = useState(true);
   const [courseColors, setCourseColors] = useState({});
 
@@ -33,7 +32,7 @@ const Dashboard = () => {
         const res = await fetch("http://localhost:8000/api/students/dashboard/", {
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`, // ✅ Template literal fixed
+            Authorization: `Bearer ${token}`,
           },
         });
 
@@ -41,12 +40,6 @@ const Dashboard = () => {
 
         const data = await res.json();
         setCourses(data.courses || []);
-        setToday({
-          date: data.today?.date || new Date().toDateString(),
-          attended: data.today?.attended || 0,
-          total: data.today?.total || 0,
-          classes: data.today?.classes || [],
-        });
 
         const colors = {};
         (data.courses || []).forEach((course, index) => {
@@ -68,7 +61,7 @@ const Dashboard = () => {
   return (
     <div className="w-full min-h-screen bg-gray-50 p-6 pt-28">
       <h2 className="text-2xl font-semibold text-gray-800 mb-6">
-        Here is your summary for today.
+        Your Courses
       </h2>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-7xl mx-auto">
@@ -94,7 +87,7 @@ const Dashboard = () => {
 
               <button
                 className="w-full bg-purple-100 text-purple-700 py-2 rounded-xl text-sm hover:bg-purple-200 transition"
-                onClick={() => navigate(`/student/courses/${course.id}`)} // ✅ Template literal fixed
+                onClick={() => navigate(`/student/courses/${course.id}`)}
               >
                 View Course
               </button>
