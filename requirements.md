@@ -264,6 +264,7 @@ Deliver a secure authentication system and establish continuous integration work
 **Sara**
 - Helped design login/register UI.
 - Fixed routing and navigation issues.
+- worked on the teacher page UI.
 
 **Raghad**
 - Set up CI workflows for Authentication, Frontend, and Student Dashboard.
